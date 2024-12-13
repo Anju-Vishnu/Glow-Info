@@ -10,7 +10,6 @@
       </v-app-bar>
   
       <!-- Main Container -->
-        <!--container-->
       <v-main class="bg-image">
         <v-container fluid>
           <v-row justify="left" align="left" style="height: 100vh;">
