@@ -1,0 +1,25 @@
+import { createStore } from 'vuex';
+import rootGetters from './getters.js';
+import rootMutations from './mutations.js';
+import rootActions from './actions.js';
+import adminModule from './modules/admin/index.js';
+import parlourModule from'./modules/parlour/index.js';
+import userModule from './modules/user/index.js';
+
+
+const store=createStore({
+    modules:{
+        admin: adminModule,
+        parlour: parlourModule,
+        user: userModule,
+    },
+    state(){
+        return{
+            baseUrl:'http://192.168.1.2:8086',
+        }
+    },
+    mutations: rootMutations,
+    actions: rootActions,
+    getters:rootGetters,
+});
+export default store;
