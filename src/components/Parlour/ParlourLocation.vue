@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div id="map" style="height: 400px; width: 650px;"></div>
+        <div id="map" style="height: 400px; width: 800px;"></div>
         <v-btn @click="toggleSearch">Select Location</v-btn>
         <div v-if="showSearch" class="search-container">
             <input
@@ -14,6 +14,7 @@
 
         <!-- Display location details -->
         <div v-if="markerPosition" class="location-details">
+            <p>Selected Location: {{ locationName }}</p>
             <v-btn @click="confirmLocation">Confirm Location</v-btn>
         </div>
     </div>
@@ -24,9 +25,9 @@ import { defineComponent, ref, onMounted, onBeforeUnmount } from 'vue';
 import L from "leaflet";
 import 'leaflet/dist/leaflet.css';
 
-
-// Import your custom icon
-import markerIcon from '@/assets/icon3.png'; // Adjust the path as necessary
+// Import Leaflet's default marker icons
+// import markerIcon from 'leaflet/dist/images/marker-icon.png';
+// import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 export default defineComponent({
     setup(_, { emit }) {
@@ -37,15 +38,14 @@ export default defineComponent({
         const showSearch = ref(false);
         const locationName = ref('');
 
-        // Create a custom icon
-        const customIcon = L.icon({
-            iconUrl: markerIcon, // Your custom icon image
-            iconSize: [25, 41], // Size of the icon
-            iconAnchor: [12, 41], // Anchor point of the icon
-            popupAnchor: [1, -34], // Popup anchor point
-            shadowUrl: null, // Optionally add a shadow
-            shadowSize: null, // Size of the shadow
-        });
+        // // Default Leaflet marker icon
+        // const defaultIcon = L.icon({
+        //     iconUrl: L.Icon.Default.prototype._getIconUrl('icon'),
+        //     shadowUrl: markerShadow,
+        //     iconSize: [25, 41],
+        //     iconAnchor: [12, 41],
+        //     popupAnchor: [1, -34],
+        // });
 
         // Initialize the map
         onMounted(() => {
@@ -58,16 +58,22 @@ export default defineComponent({
                 }).addTo(map.value);
 
                 // Set marker on map click
-                map.value.on("click", (event) => {
+                map.value.on("click", async (event) => {
                     if (marker.value) {
                         marker.value.setLatLng(event.latlng);
                     } else {
-                        // Use the custom icon here
-                        marker.value = L.marker(event.latlng, { icon: customIcon }).addTo(map.value);
+                        marker.value = L.marker(event.latlng).addTo(map.value);
+                     }
+                    markerPosition.value = event.latlng;
+                     
+                    try {
+                        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${event.latlng.lat}&lon=${event.latlng.lng}`);
+                        const data = await response.json();
+                        locationName.value = data.display_name || "Unnamed Location"; // Get name from API
+                    } catch (error) {
+                        console.error("Reverse geocoding error:", error);
+                        locationName.value = "Unnamed Location"; // Fallback
                     }
-                    markerPosition.value = event.latlng; // Set marker position to clicked location
-                    showSearch.value = false; // Hide search input
-                    locationName.value = 'Unnamed Location';
                 });
             }
         });
@@ -77,7 +83,7 @@ export default defineComponent({
             if (map.value) {
                 map.value.off();
                 map.value.remove();
-                map.value = null; // Ensure the map reference is cleared
+                map.value = null;
             }
         });
 
@@ -92,36 +98,44 @@ export default defineComponent({
         // Search for a location
         const searchLocation = async () => {
             if (searchQuery.value) {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.value)}`);
-                const results = await response.json();
-                if (results.length > 0) {
-                    const { lat, lon, display_name } = results[0];
-                    if (marker.value) {
-                        marker.value.setLatLng([lat, lon]);
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery.value)}`);
+                    const results = await response.json();
+                
+                    if (results.length > 0) {
+                        const { lat, lon, display_name } = results[0]; // Keep 'display_name'
+                    
+                        if (marker.value) {
+                            marker.value.setLatLng([lat, lon]);
+                        } else {
+                            marker.value = L.marker([lat, lon]).addTo(map.value);
+                        }
+                    
+                        markerPosition.value = { lat, lng: lon };
+                        map.value.setView([lat, lon], 13);
+                    
+                        locationName.value = display_name || searchQuery.value; // Use the fetched name or search input
+                        showSearch.value = false;
+                        searchQuery.value = '';
                     } else {
-                        marker.value = L.marker([lat, lon], { icon: customIcon }).addTo(map.value);
+                        alert("Location not found!");
                     }
-                    markerPosition.value = { lat, lng: lon };
-                    map.value.setView([lat, lon], 13); // Center the map on the new marker
-                    locationName.value = display_name; // Set the location name
-                    showSearch.value = false; // Hide search input
-                    searchQuery.value = ''; // Clear search query
-                } else {
-                    alert("Location not found!");
+                } catch (error) {
+                    console.error("Error fetching location:", error);
+                    alert("An error occurred while searching for the location.");
                 }
             }
         };
 
-        // Emit the coordinates when the user confirms location
+        // Emit the selected location
         const confirmLocation = () => {
-            //if (markerPosition.value) {
+            if (markerPosition.value) {
                 emit('childValues', {
                     locationName: locationName.value || 'Unnamed location',
                     latitude: markerPosition.value.lat,
                     longitude: markerPosition.value.lng,
                 });
-                //alert(`Location Confirmed:\nName: ${locationName.value}\nLatitude: ${markerPosition.value.lat}\nLongitude: ${markerPosition.value.lng}`);
-            
+            }
         };
 
         return {

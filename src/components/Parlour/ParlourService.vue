@@ -7,18 +7,17 @@
           <i class="fas fa-cut"></i>
         </template>
         <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
-          <v-spacer></v-spacer>
-          <v-btn class="log" @click="navparlourlogin">Parlour Login</v-btn>
-        </v-app-bar> 
-      
-        <v-main>
-        <v-card width="750px" class="text-black mx-auto">
+        <v-spacer></v-spacer>
+      </v-app-bar>
+
+      <v-main>
+        <v-card width="1000px" class="text-black mx-auto">
           <v-container fluid>
             <v-row dense>
               <v-col cols="12">
                 <h1 class="mt-3">Add Services</h1>
                 <!-- Form to add new service -->
-                <v-form ref="form" @submit.prevent="addService">
+                <v-form ref="form" v-model="formValid" @submit.prevent="handleFormSubmit">
                   <v-text-field
                     v-model="newService.itemName"
                     label="Service Name"
@@ -38,70 +37,135 @@
                     required
                   ></v-text-field>
                   <v-text-field
-                    v-model="newService.time"
+                    v-model="newService.serviceTime"
                     label="Service Time"
-                    :rules="[
-                      v => !!v || 'Time is required',
-                      v => /^([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])$/.test(v) || 'Invalid time format. Use hr:min:sec (e.g., 02:30:15)'
-                    ]"
+                    :rules="[v => !!v || 'Time is required', v => /^([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])$/.test(v) || 'Invalid time format (hh:mm:ss)']"
                     required
                   ></v-text-field>
                   <v-select
                     v-model="newService.categoryId"
                     :items="categories"
+                    item-title="name"
+                    item-value="id"
                     label="Category"
                     :rules="[v => !!v || 'Category is required']"
                     required
                   ></v-select>
+                  <v-file-input
+                    v-model="categoryImage"
+                    label="Upload Category Image"
+                    @change="handleCategoryImage"
+                    accept="image/*"
+                    outlined
+                  ></v-file-input>
                   <v-select
                     v-model="newService.subCategoryId"
-                    :items="subCategoryOptions"
+                    :items="subCategories"
+                    item-title="subCategoryName"
+                    item-value="id"
                     label="Sub Category"
                     :rules="[v => !!v || 'Sub Category is required']"
                     required
                   ></v-select>
+                  <v-file-input
+                    v-model="subCategoryImage"
+                    label="Upload Subcategory Image"
+                    @change="handleSubCategoryImage"
+                    accept="image/*"
+                    outlined
+                  ></v-file-input>
                   <v-select
                     v-model="newService.subSubCategoryId"
-                    :items="subSubCategoryOptions"
+                    :items="subSubCategories"
+                    item-title="subSubCategoryName"
+                    item-value="id"
                     label="Subsub Category"
                     :rules="[v => !!v || 'Subsub Category is required']"
                     required
                   ></v-select>
                   <v-file-input
+                    v-model="subSubCategoryImage"
+                    label="Upload Subsub Category Image"
+                    @change="handleSubSubCategoryImage"
+                    accept="image/*"
+                    outlined
+                  ></v-file-input>
+                  <v-file-input
+                    ref="fileInput"
                     label="Add Image"
                     @change="handleServiceImage"
                     accept="image/*"
                     outlined
                   ></v-file-input>
+                  <v-checkbox
+                    label="Availability"
+                    v-model="newService.availability"
+                  ></v-checkbox>
 
-                  <v-btn type="submit" color="primary">Add Service</v-btn>
+                  <v-btn type="submit" color="primary" :loading="loading">Add Service</v-btn>
                 </v-form>
 
-                <!-- Display Services -->
-                <v-btn @click="toggleItems" color="primary">
-                  {{ showItems ? 'Hide Items' : 'Show Items' }}
-                </v-btn>
+                <!-- Service Table -->
+                <div class="service-table mt-4">
+                  <div class="table-header">
+                    <div class="table-cell">Id</div>
+                    <div class="table-cell">Service Name</div>
+                    <div class="table-cell">Description</div>
+                    <div class="table-cell">Price</div>
+                    <div class="table-cell">Service Time</div>
+                    <div class="table-cell">Image</div>
+                    <div class="table-cell">Actions</div>
+                  </div>
 
-                <v-data-table
-                  v-if="showItems && services.items.length"
-                  :items="services.items"
-                  :headers="tableHeaders"
-                  item-value="id"
-                  class="mt-4"
-                >
-                  <template v-slot:top>
-                    <h2>Services List</h2>
-                  </template>
-                  <!-- Custom slot for image column -->
-                  <template v-slot:item.img="{ item }">
-                    <v-img :src="item.img" max-height="150px" max-width="150px" class="max-auto"></v-img>
-                  </template>
-                  <!-- Custom Slot for actions -->
-                  <template v-slot:item.actions="{item}">
-                    <v-btn color="primary" @click="editService(item)">Edit</v-btn>
-                    <v-btn color="error" @click="deleteService(item)">Delete</v-btn>
-                  </template>
-                </v-data-table>
+                  <div v-if="listService.length === 0" class="empty-state">
+                    No services found.
+                  </div>
+                  <div class="table-row" v-for="(service, index) in listService" :key="index">
+                    <div class="table-cell">{{ service.id }}</div>
+                    <div class="table-cell">{{ service.itemName }}</div>
+                    <div class="table-cell">{{ service.description || 'No description available'}}</div>
+                    <div class="table-cell">{{ service.price }}</div>
+                    <div class="table-cell">{{ service.serviceTime }}</div>
+                    <div class="table-cell">
+                      <v-img 
+                        v-if="service.img"
+                        :src="service.img" 
+                        max-height="80px" 
+                        max-width="80px"
+                        class="custom-image"
+                      ></v-img>
+                      <div v-else>No image uploaded</div>
+                    </div>
+                    <div class="table-cell actions">
+                      <v-btn color="primary" @click="openEditDialog(service)">Edit</v-btn>
+                      <!-- Edit Service Dialog -->
+                      <v-dialog v-model="editDialog" max-width="500px">
+                        <v-card>
+                          <v-card-title>
+                            <span class="text-h5">Edit Service</span>
+                          </v-card-title>
+                          <v-card-text>
+                            <v-form ref="editForm">
+                              <!-- <v-text-field v-model="editedService.id" label="Item Name" required disabled></v-text-field> -->
+                              <v-text-field v-model="editedService.itemName" label="Item Name" required></v-text-field>
+                              <v-textarea v-model="editedService.description" label="Description" required></v-textarea>
+                              <v-text-field v-model="editedService.price" label="Price" type="number" required></v-text-field>
+                              <v-text-field v-model="editedService.serviceTime" label="Service Time" required></v-text-field>
+                              <v-switch v-model="editedService.availability" label="Available"></v-switch>
+                            </v-form>
+                          </v-card-text>
+                        
+                          <v-card-actions>
+                            <v-spacer></v-spacer>
+                            <v-btn color="grey" @click="editDialog = false">Cancel</v-btn>
+                            <v-btn color="primary" @click="editService">Save</v-btn>
+                          </v-card-actions>
+                        </v-card>
+                      </v-dialog>
+                      <v-btn color="error" @click="deleteService(service)">Delete</v-btn>
+                    </div>
+                  </div>
+                </div>
               </v-col>
             </v-row>
           </v-container>
@@ -117,201 +181,248 @@ import { mapGetters } from 'vuex';
 export default {
   data() {
     return {
-      services: { items: [] },
+      categoryImage: null,
+      subCategoryImage: null,
+      subSubCategoryImage: null,
+      editDialog:false,
+      editedService:{
+        id: null,
+        itemName: "",
+        description: "",
+        price: null,
+        serviceTime: "",
+        availability: false
+      },
+      // services: [],
       tableHeaders: [
-        { text: 'Service Name', value: 'itemName' },
-        { text: 'Description', value: 'description' },
-        { text: 'Price', value: 'price' },
-        { text: 'Service Time', value: 'time' },
-        { text: 'Category', value: 'categoryId' },
-        { text: 'Sub Category', value: 'subCategoryId' },
-        { text: 'Subsub Category', value: 'subSubCategoryId' },
-        { text: 'Image', value: 'img' },
-        { text: 'Actions', value:'actions', sortable: false},
+        { text: "Parlour ID", value: "parlourId" },
+        { text: "Service Name", value: "itemName" },
+        { text: "Description", value: "description" },
+        { text: "Price", value: "price" },
+        { text: "Service Time", value: "serviceTime" },
+        { text: "Category", value: "categoryId" },
+        { text: "Sub Category", value: "subCategoryId" },
+        { text: "Subsub Category", value: "subSubCategoryId" },
+        { text: "Image", value: "img" },
+        { text: "Availability", value: "availability" },
+        { text: "Actions", value: "actions", sortable: false }
       ],
       newService: {
-        itemName: '',
-        description: '',
-        price: '',
-        time: '',
+        parlourId: "",
+        itemName: "",
+        description: "",
+        price: "",
+        serviceTime: "",
+        availability:"false",
         categoryId: null,
         subCategoryId: null,
-        subSubCategoryId: null,
+        subSubCategoryId: null
       },
-      editingServiceIndex: null, // Track editing index
       serviceImage: null,
-      imagePreviewUrl: '',
+      imagePreviewUrl: "",
       showItems: false,
-      // categories: ['Men', 'Women', 'Kid'],
-      // subcategories: {
-      //   Men: ['Bridal', 'Hair', 'Makeover', 'Skin', 'Nails'],
-      //   Women: ['Facial', 'Massage', 'Makeover', 'Haircut', 'Nails'],
-      //   Kid: ['Kids Haircut', 'Kids Facial'],
-      // },
-      //         subsubcategories: {
-      //     Men: {
-      //       Bridal: ['Wedding', 'Reception'],
-      //       Hair: ['Haircut', 'Styling'],
-      //       Makeover: ['Makeover'],
-      //       Skin: ['Facial', 'Massage'],
-      //       Nails: ['Manicure', 'Pedicure']
-      //     },
-      //     Women: {
-      //       Facial: ['Anti-aging', 'Brightening'],
-      //       Massage: ['Full-body', 'Neck & Shoulder'],
-      //       Makeover: ['Bridal', 'Party'],
-      //       Haircut: ['Short', 'Long'],
-      //       Nails: ['Manicure', 'Pedicure']
-      //     },
-      //     Kid: {
-      //       'Kids Haircut': ['Boys', 'Girls'],
-      //       'Kids Facial': ['Basic', 'Special']
-      //     }
-      //},
-      };
+      formValid: false,
+      loading: false,
+      error: null
+    };
+  },
+  computed: {
+    ...mapGetters("parlour", ["getServiceList","getServiceCategory", "getServiceSubCategory", "getServiceSubsubCategory", "getParlour","getService"]),
+    categories() {
+      return this.getServiceCategory;
     },
-  //   watch: {
-  //   'newService.categoryId'(newVal) {
-  //     if (newVal) {
-  //       this.updateSubcategories();  // Only call the update if newVal is valid
-  //     }
-  //   },
-  //   'newService.subCategoryId'(newVal) {
-  //     if (newVal) {
-  //       this.updateSubsubcategories();  // Only call the update if newVal is valid
-  //     }
-  //   }
-  // },
+    subCategories() {
+      return this.getServiceSubCategory;
+    },
+    subSubCategories() {
+      return this.getServiceSubsubCategory;
+    },
+    parlour() {
+      console.log("list",this.parlour);
+      return this.getParlour;
+    },
+    listService() {
+      console.log(this.getService); 
+      return this.getService.map(service => ({
+        ...service,
+        description: service.description || "No description available"
+      }));
+    },
+    serviceList(){
+      return this.getServiceList;
+    },
+  },
+  mounted() {
+    this.fetchService();
+    this.$store.dispatch("parlour/serviceCategory");
+    this.$store.dispatch("parlour/serviceSubCategory");
+    this.$store.dispatch("parlour/serviceSubSubCategory");
+  },
   methods: {
-      handleServiceImage(event) {
-      // Ensure the event is not null and files are available
-      const file = event && event.target && event.target.files ? event.target.files[0] : null;
-        
-      if (file) {
-        // Check if the file is a valid image
-        if (file && file.type.startsWith('image/')) {
-          // Generate the URL for the file and store it for preview
-          this.serviceImage = file;
-          this.imagePreviewUrl = URL.createObjectURL(file);
-        } else {
-          alert('Please select a valid image file.');
-        }
+    openEditDialog(service){
+      this.editedService = { ...service }; // Copy data to prevent modifying original before save
+      this.editDialog = true;
+    },
+    handleFormSubmit() {
+      if (this.formValid) {
+        this.serviceAdd();
       } else {
-        console.error('No file selected or invalid event');
+        alert("Form is invalid!");
+      }
+    },
+    handleServiceImage(event) {
+      const file = event?.target?.files?.[0];
+      if (file && file.type.startsWith("image/") && file.size <= 2 * 1024 * 1024) {
+        this.serviceImage = file;
+        this.imagePreviewUrl = URL.createObjectURL(file);
+      } else {
+        alert("Please select a valid image file (max size 2MB).");
+        this.serviceImage = null;
+        this.imagePreviewUrl = "";
       }
     },
     resetForm() {
-      this.newService = { itemName: '', description: '', price: '', categoryId: null, subCategoryId: null, subSubCategoryId: null };
+      this.newService = {
+        parlourId: "",
+        itemName: "",
+        description: "",
+        price: "",
+        serviceTime: "",
+        availability:"false",
+        categoryId: null,
+        subCategoryId: null,
+        subSubCategoryId: null
+      };
       this.$refs.form.reset();
       this.serviceImage = null;
-    },
-    updateSubcategories() {
-      this.subCategoryOptions = this.subcategories[this.newService.categoryId] || [];
-      this.newService.subCategoryId = null;
-      this.newService.subSubCategoryId = null;
-    },
-    updateSubsubcategories() {
-      this.subSubCategoryOptions = this.subsubcategories[this.newService.categoryId]?.[this.newService.subCategoryId] || [];
-    },
-    addService() {
-      if (this.$refs.form.validate() && this.serviceImage) {
-        const newService = { ...this.newService, img: URL.createObjectURL(this.serviceImage) };
-        this.services.items.push(newService);
-        this.resetForm();
-      } else {
-        alert('Please fill all fields and select an image.');
-      }
+      this.imagePreviewUrl = "";
+      if (this.$refs.fileInput) this.$refs.fileInput.reset();
     },
     toggleItems() {
       this.showItems = !this.showItems;
     },
-    editService(service) {
-      // Load the selected service data into the form for editing
-      this.newService = { ...service };
-      this.showItems = false; // Hide the table to focus on the form
-    },
-    deleteService(service) {
-      // Find the index of the service to be deleted
-      const index = this.services.items.indexOf(service);
-      if (index !== -1) {
-        // Remove the service from the list
-        this.services.items.splice(index, 1);
+    handleCategoryImage(event) {
+      const file = event?.target?.files?.[0];
+      if (file && file.type.startsWith("image/") && file.size <= 2 * 1024 * 1024) {
+        this.categoryImage = file;
+      } else {
+        alert("Please select a valid category image file (max size 2MB).");
+        this.categoryImage = null;
       }
     },
-    serviceList(){
-      const serviceList = JSON.parse(sessionStorage.getItem("serviceList"));
-      return serviceList;
+    handleSubCategoryImage(event) {
+      const file = event?.target?.files?.[0];
+      if (file && file.type.startsWith("image/") && file.size <= 2 * 1024 * 1024) {
+        this.subCategoryImage = file;
+      } else {
+        alert("Please select a valid subcategory image file (max size 2MB).");
+        this.subCategoryImage = null;
+      }
     },
-    navparlourlogin() {
-      this.$router.push({ name: 'parlourLogin' });
+    handleSubSubCategoryImage(event) {
+      const file = event?.target?.files?.[0];
+      if (file && file.type.startsWith("image/") && file.size <= 2 * 1024 * 1024) {
+        this.subSubCategoryImage = file;
+      } else {
+        alert("Please select a valid subsubcategory image file (max size 2MB).");
+        this.subSubCategoryImage = null;
+      }
     },
     async serviceAdd() {
       this.loading = true;
-            try {
-              const payload = {
-                itemName: this.newService.itemName,
-                description: this.newService.description,
-                price: this.newService.price,
-                time: this.newService.time,
-                categoryId: this.newService.categoryId,
-                subCategoryId: this.newService.subCategoryId,
-                subSubCategoryId: this.newService.subSubCategoryId,
-                image: this.serviceImage // Ensure the image data is included if needed
-              };
-                // Simulate add service process
-              await this.$store.dispatch('parlour/ParlourService', payload);
-   
-              this.$router.push({name: 'parlourService'});
-              this.success = true;
-              this.resetForm();
+      try {
+        const formData = new FormData();
+        formData.append("parlourId", this.parlour.parlour.id);
+        formData.append("itemName", this.newService.itemName);
+        formData.append("description", this.newService.description);
+        formData.append("price", this.newService.price);
+        formData.append("serviceTime", this.newService.serviceTime);
+        formData.append("availability",this.newService.availability);
+        formData.append("categoryId", this.newService.categoryId);
+        formData.append("subCategoryId", this.newService.subCategoryId);
+        formData.append("subSubCategoryId", this.newService.subSubCategoryId);
 
-            } catch (error) {
-                console.error(error);
-                this.error = error.response?.data?.message || 'Add service failed';
-            } finally {
-                this.loading = false;
-            }
-        },
-        async serviceCategory(){
-          try{
-            await this.$store.dispatch('parlour/serviceCategory');
-          }catch (error) {
-            console.error(error);
-          } 
-        },
-        async serviceSubCategory(){
-          try{
-            await this.$store.dispatch('parlour/serviceSubCategory');
-          }catch (error) {
-            console.error(error);
-          }
-        },
-        async serviceSubSubCategory(){ // method name
-          try{
-            await this.$store.dispatch('parlour/serviceSubSubCategory'); //action name
-          }catch(error){
-            console.error(error);
-          }
-        },
-      },
-      mounted(){
-        this.serviceCategory();
-        this.serviceSubCategory();
-        this.serviceSubSubCategory();
-      },
-      computed:{
-        ...mapGetters('parlour', ['getServiceCategory', 'getServiceSubCategory', 'getServiceSubsubCategory']),
-        categories(){
-          return this.getServiceCategory;
-        },
-        subCategories(){
-          return this.getServiceSubCategory;
-        },
-        subSubCategories(){
-          return this.getServiceSubsubCategory;
-        },
+        if (this.categoryImage) formData.append("categoryImage", this.categoryImage);
+        if (this.subCategoryImage) formData.append("subCategoryImage", this.subCategoryImage);
+        if (this.subSubCategoryImage) formData.append("subSubCategoryImage", this.subSubCategoryImage);
+
+        if (this.serviceImage){ 
+          formData.append("itemImage", this.serviceImage);
+        }
+       const success= await this.$store.dispatch("parlour/serviceList", formData);
+       
+       if(success){
+        alert("Service added successfully!");
+        await this.fetchService();
+        this.resetForm();
+       }else{
+        alert("Failed to add service.");
+       }
+      } catch (error) {
+        console.error("Service add error:", error);
+      } finally {
+        this.loading = false;
       }
-  };
+    },
+    async fetchService() {
+      try {
+        const payload = this.parlour.parlour.id;
+        console.log("Fetching services for:", payload);
+        const success = await this.$store.dispatch("parlour/listService", payload);
+      
+        console.log("Fetched services:", this.getService); // Debugging: check if description exists
+      
+        if (!success) throw new Error("Failed to fetch services");
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+      }
+    },
+    async editService() {
+      try {
+        const formData = new FormData();
+        formData.append("id", this.editedService.id); // Ensure ID is included
+        formData.append("itemName", this.editedService.itemName);
+        formData.append("description", this.editedService.description);
+        formData.append("price", this.editedService.price);
+        formData.append("categoryId", this.editedService.categoryId);
+        formData.append("subCategoryId", this.editedService.subCategoryId);
+        formData.append("subSubCategoryId", this.editedService.subSubCategoryId);
+        formData.append("serviceTime", this.editedService.serviceTime);
+        formData.append("availability", this.editedService.availability);
+
+        if (this.serviceImage) {
+          formData.append("itemImage", this.serviceImage);
+        }
+        console.log("Updating service with data:", [...formData.entries()]); // Debugging
+        // Dispatch Vuex action (passing only formData)
+        const success = await this.$store.dispatch("parlour/updateService", formData);    
+        if (!success) throw new Error("Failed to update services");
+        this.$toast.success("Service updated successfully!");
+        this.editDialog = false;
+        this.fetchService(); // Refresh the service list
+      } catch (error) {
+        console.error("Failed to update services:", error);
+        this.$toast.error("An error occurred while updating the service.");
+      }
+    },
+    async deleteService(service) {
+      if (confirm(`Are you sure you want to delete the service: ${service.itemName}?`)) {
+        try {
+          const success = await this.$store.dispatch("parlour/deleteService", service.id);
+          if (success) {
+            alert("Service deleted successfully!"); // Browser alert
+            await this.fetchService();
+            this.resetForm();
+          }else{
+            alert("Failed to delete service. Please try again.");
+          }
+        } catch (error) {
+          console.error("Error deleting service:", error);
+        }
+      }
+    }
+  }
+};
 </script>
 
 <style scoped>
@@ -324,12 +435,6 @@ export default {
   .profile-photo {
     border-radius: 50;
     border: 2px solid white;
-  }
-  .round-img {
-    border-radius: 10px;
-  }
-  .square-image {
-    border-radius: 5px;
   }
   .custom-gradient {
     background: linear-gradient(to right, #004d40, #00695c);
@@ -372,5 +477,68 @@ h2 {
   max-width: 300px;
   box-shadow: black 2px;
   background: linear-gradient(to left, #8d259b, #ff00bf);
+}
+.elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.profile-data {
+  text-align: left;
+  font-size: medium;
+}
+.service-table {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  background: white;
+}
+
+.table-header {
+  display: flex;
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.table-row {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  background-color: #fff;
+  transition: background 0.3s;
+}
+
+.table-row:hover {
+  background-color: #f5f5f5;
+}
+
+.table-cell {
+  flex: 1;
+  padding: 8px;
+  text-align: left;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 16px;
+}
+.custom-image {
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  object-fit: cover; /* Ensures the image covers the area without distorting */
+  border: 2px solid #ddd; /* Optional border */
 }
 </style>

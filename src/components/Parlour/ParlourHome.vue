@@ -1,182 +1,333 @@
 <template>
   <v-app>
-  <!-- App Bar Section -->
-  <v-app-bar color="brown-darken-4" class="custom-gradient">
-    <template v-slot:prepend>
-      <i class="fas fa-cut"></i>
-    </template>
-    <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
-    <v-spacer></v-spacer>
-  </v-app-bar>
-    <!-- <v-btn icon><v-icon>mdi-magnify</v-icon></v-btn>
-    <v-btn icon><v-icon>mdi-heart</v-icon></v-btn> -->
-    
-    <!-- Dropdown Menu Button -->
-    <!-- Dropdown Menu Button with v-model for explicit control -->
-    <!-- <v-menu v-model="menuVisible" open-on-click offset-y>
-    <template v-slot:activator="{ on, attrs }">
-      <v-btn icon v-bind="attrs" v-on="on" @click="menuVisible=true">
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
-    </template>
-    <v-list>
-      <v-list-item @click="goToProfile">
-          <v-list-item-title>Profile</v-list-item-title>
-        </v-list-item>
-        <v-list-item @click="logout">
-          <v-list-item-title>Log Out</v-list-item-title>
-        </v-list-item>
-      </v-list>
-      </v-menu> -->
-    <v-menu>
-      <template v-slot:activator="{ props }">
-        <v-btn icon="mdi-dots-vertical" variant="text" v-bind="props"></v-btn>
+    <!-- App Bar Section -->
+    <v-app-bar color="brown-darken-4" class="custom-gradient">
+      <template #prepend>
+        <v-icon>fas fa-cut</v-icon>
       </template>
+      <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
+      <v-spacer></v-spacer>
     
-      <v-list>
-        <!-- Profile Button -->
-      <v-list-item @click="goToProfile">
-        <v-list-item-title>Profile</v-list-item-title>
-      </v-list-item>
-      <!-- Log Out Button -->
-      <v-list-item @click="logout">
-        <v-list-item-title>Log Out</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-menu>
-<!-- Main Content -->
-  <v-main>
-    <v-card color="grey" width="800px" class="text-black mx-auto" v-for="parlour in parlour" :key="parlour.id">
-      <v-container fluid>
-        <!-- Slideshow and Profile Section -->
-        <v-row dense>
-          <v-col cols="12">
-            <v-img
-              :src="'data:image/png;base64,' + parlour.coverImage"
-              alt="Cover Photo"
-              gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
-              height="400px"
-              cover
-            ></v-img>
-            <!-- Profile Section -->
-            <div class="profile-container">
-              <v-avatar size="100">
-                <v-img :src="'data:image/png;base64,' + parlour.image" alt="Profile Photo"></v-img>
-              </v-avatar>
-              <v-card-title class="profile-title">{{ parlour.parlourName }}</v-card-title>
-            </div>
-          </v-col>
-        </v-row>
-
-        <!-- Details Sections -->
-
-        <!-- Appointment Section -->
-        <v-col cols="12" md="6">
-        <v-btn @click="gotoAppointPage"><i class="fas fa-edit"></i>Appointment Details</v-btn>
-        <template v-if="card && card.appointments">
-        <v-row class="book" v-for="appointment in card.appointments" :key="appointment.title">
-          <!-- Display Appointment Details -->
-          <v-col cols="12">
-            <p>{{ appointment.title }}</p>
-            </v-col>
-        </v-row>
+      <!-- Info Button -->
+      <v-btn icon @click="fetchParlourDetails">
+        <v-icon>mdi-account</v-icon>
+      </v-btn>
+    
+      <!-- Dropdown Menu -->
+      <v-menu>
+        <template #activator="{ props }">
+          <v-btn v-bind="props" icon aria-label="Menu">
+            <v-icon>mdi-dots-vertical</v-icon>
+          </v-btn>
         </template>
-        </v-col>
-        <!-- Employee Section -->
-        <v-col cols="12" md="6">
-        <v-btn @click="gotoEmployeePage"><i class="fas fa-edit"></i>Employee Details</v-btn>
-        <template v-if="card && card.employees">
-        <v-row class="book" v-for="employee in card.employees" :key="employee.title">
-          <!-- Display Employee Details -->
-           <v-col cols="12">
-            <p>{{ employee.name }}</p>
-           </v-col>
-        </v-row>
-        </template>
-        </v-col>
+        <v-list>
+           <v-list-item @click="logout">
+            <v-list-item-icon><v-icon>mdi-logout</v-icon></v-list-item-icon>
+            <v-list-item-title>Log Out</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-app-bar>
 
-        <!-- Services Section -->
-        <v-col cols="12" md="6">
-        <v-btn @click="gotoServicePage"><i class="fas fa-edit"></i>Services</v-btn>
-        <template v-if="card && card.services">
-        <v-row class="book" v-for="service in card.services" :key="service.title">
-          <!-- Display Service Details -->
-           <v-col cols="12">
-            <p>{{ service.title }}</p>
-           </v-col>
-        </v-row>
-        </template>
-        </v-col>
-
-        <!-- Offers Section -->
-         <v-col cols="12" md="6">
-        <v-btn @click="toggleEditDialog"><i class="fas fa-edit"></i>Offers</v-btn>
-        <template v-if="card && card.offers">
-          <v-row class="book" v-for="offer in card.offers" :key="offer.title">
-            <!-- Offer Card Content -->
-             <v-col cols="12">
-              <p>{{ offer.title }}</p>
-             </v-col>
-        </v-row>
-        </template>
-        </v-col>
-      </v-container>
-    </v-card>
-  </v-main>
-
-    <!-- Edit Dialog -->
-    <!-- <v-dialog v-model="editDialog" max-width="800px">
-      <v-card color="black" class="text-white">
-        <v-card-title>Edit Salon Information</v-card-title>
+    <!-- Parlour Info Dialog -->
+    <v-dialog v-model="showDialog" persistent max-width="400px" location="end" content-class="custom-dialog">
+      <v-card>
+        <v-card-title class="headline text-center pa-2">
+          Parlour Details
+        </v-card-title>
         <v-card-text>
-          <v-text-field v-model="editedCard.parlourName" label="Title" required></v-text-field>
-          <v-btn color="green" @click="saveChanges">Save</v-btn>
-          <v-btn color="red" @click="cancelChanges">Cancel</v-btn>
+          <v-container>
+            <v-row justify="center" class="mb-2">
+              <v-avatar size="100">
+                <v-img 
+                  :src="parlour.parlour.image ? 'data:image/png;base64,' + parlour.parlour.image : defaultProfileImage" 
+                  alt="Profile Photo"
+                ></v-img>
+              </v-avatar>
+            </v-row>
+            <v-row justify="center" class="mt-1">
+              <v-col class="text-left pa-1">
+                <p><strong>Name:</strong> {{ parlour.parlour.parlourName || 'N/A' }}</p> 
+                <p><strong>Email:</strong> {{ parlour.parlour.email || 'N/A' }}</p>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card-text>
+        <v-card-actions class="justify-center">
+          <v-btn color="primary" @click="openDialog">View Profile</v-btn>
+          <v-btn color="red" @click="deleteParlour">Delete</v-btn>
+          <v-btn color="green" @click="toggleDialog">Close</v-btn>
+        </v-card-actions>
       </v-card>
-    </v-dialog> -->
-</v-app>
+    </v-dialog>
+
+    <!-- Main Content -->
+    <v-main>
+      <v-card color="grey" width="800px" class="text-black mx-auto">
+        <v-container fluid>
+          <!-- Slideshow and Profile Section -->
+          <v-row dense>
+            <v-col cols="12">
+              <!-- Cover Image -->
+              <v-img
+                :src="parlour.parlour.coverImage ? 'data:image/png;base64,' + parlour.parlour.coverImage : defaultCoverImage"
+                alt="Cover Photo"
+                gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+                height="400px"
+                cover
+                class="editable-image"
+                @click="openImageDialog('cover')"
+              ></v-img>
+              <!-- Profile Section -->
+              <div class="profile-container">
+                <v-avatar size="100">
+                  <v-img 
+                    :src="parlour.parlour.image ? 'data:image/png;base64,' + parlour.parlour.image : defaultProfileImage" 
+                    alt="Profile Photo"
+                  ></v-img>
+                  <v-icon class="edit-icon">mdi-camera</v-icon>
+                </v-avatar>
+                <v-card-title class="profile-title mt-4">{{ parlour.parlour.parlourName }}</v-card-title>
+              </div>
+            </v-col>
+          </v-row>
+        
+          <v-dialog v-model="imageDialog" persistent max-width="400px">
+            <v-card>
+              <v-card-title>Update {{ editingImage === 'profile' ? 'Profile' : 'Cover' }} Picture</v-card-title>
+              <v-card-text>
+                <!-- Image Preview -->
+                <v-img :src="previewImage || defaultImage" height="200px" contain></v-img>
+              
+                <!-- File Input -->
+                <v-file-input 
+                  label="Choose Image" 
+                  accept="image/*" 
+                  @change="handleImageChange"
+                ></v-file-input>
+              </v-card-text>
+              <v-card-actions>
+                <v-btn color="green" @click="saveImage">Save</v-btn>
+                <v-btn color="red" @click="imageDialog = false">Cancel</v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
+
+          <!-- Dynamic Sections -->
+          <template v-for="(section, index) in sections" :key="index">
+            <v-col cols="12" md="6">
+              <v-btn @click="section.action"><i :class="section.icon"></i> {{ section.label }}</v-btn>
+              <template v-if="parlour[section.dataKey]">
+                <v-row class="book" v-for="item in parlour[section.dataKey]" :key="item.title">
+                  <v-col cols="12">
+                    <p>{{ item.title || item.name }}</p>
+                  </v-col>
+                </v-row>
+              </template>
+            </v-col>
+          </template>
+        </v-container>
+      </v-card>
+    </v-main>
+    <!-- Edit Dialog -->
+    <v-dialog v-model="editDialog" persistent max-width="600px">
+      <v-card>
+        <v-card-title>Edit Parlour Information</v-card-title>
+          <v-card-text>
+            <v-text-field 
+              v-model="editedCard.parlourName" 
+              label="Parlour Name" 
+              required
+            ></v-text-field>
+            <v-text-field 
+              v-model="editedCard.email" 
+              label="Email" 
+              required
+            ></v-text-field>
+            <v-text-field 
+              v-model="editedCard.phoneNumber" 
+              label="Phone Number" 
+              required
+            ></v-text-field>
+          </v-card-text>
+        <v-card-actions>
+          <v-btn color="green" @click="saveChanges()">Save</v-btn>
+          <v-btn color="red" @click="editDialog = false">Cancel</v-btn>
+      </v-card-actions>
+        </v-card>
+    </v-dialog>
+  </v-app>
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
+import { mapGetters } from "vuex";
 
 export default {
+  computed: {
+    ...mapGetters("parlour", ["getParlour"]),
+    parlour() {
+      return this.getParlour || {parlour:{}};
+    }
+  },
   data() {
     return {
-      menuVisible: false,
+      imageDialog: false,
+      editingImage:'',
+      selectedImage:null,
+      previewImage:null,
       editDialog: false,
-      editedCard: { parlourName: '' },
-      items: [
-        { title: 'Profile' },
-        { title: 'Log Out' },
+      showDialog: false,
+      defaultProfileImage: require('@/assets/beauty6.jpg'), 
+      defaultCoverImage: require('@/assets/beauty3.jpg'),
+      
+      editedCard: {
+        parlourId: "",
+        parlourName: '',
+        email: '',
+        phoneNumber: '',
+      },
+      sections: [
+        { 
+          label: "Appointment Details", 
+          action: () => this.$router.push({ name: "parlourAppoint" }), 
+          dataKey: "appointments", 
+          icon: "fas fa-edit"
+        },
+        { 
+          label: "Employee Details", 
+          action: () => this.$router.push({ name: "parlourEmployee" }), 
+          dataKey: "employees", 
+          icon: "fas fa-edit" 
+        },
+        {  
+          label: "Services", 
+          action: () => this.$router.push({ name: "parlourService" }), 
+          dataKey: "services", 
+          icon: "fas fa-edit" 
+        },
+        { 
+          label: "Offers", 
+          action: () => this.$router.push({ name: "parlourOffers" }), 
+          dataKey: "offers", 
+          icon: "fas fa-edit" 
+        },
       ],
     };
   },
-  computed: {
-    ...mapGetters('parlour', ['getParlour']),
-    parlour() {
-      return this.getParlour;
+  methods: {
+  // Open dialog for profile or cover image
+  openImageDialog(type) {
+    this.editingImage = type;
+    this.previewImage = type === 'profile' 
+      ? (this.parlour.parlour.image ? 'data:image/png;base64,' + this.parlour.parlour.image : this.defaultProfileImage)
+      : (this.parlour.parlour.coverImage ? 'data:image/png;base64,' + this.parlour.parlour.coverImage : this.defaultCoverImage);
+    this.imageDialog = true;
+  },
+
+  // Handle Image Change
+  handleImageChange(event) {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedImage = file;
+      this.previewImage = URL.createObjectURL(file); // Show preview
     }
   },
-  methods: {
-    goToProfile() {
-      this.$router.push({ name: 'parlourProfile' });
-      this.menuVisible=false;
+
+  // Save Image to Backend
+  async saveImage() {
+    try {
+      const formData = new FormData();
+      formData.append("id", this.parlour.parlour.id);
+      formData.append(this.editingImage === 'profile' ? "profileImage" : "coverImage", this.selectedImage);
+
+      console.log("Uploading image:", this.selectedImage.name);
+      await this.$store.dispatch('parlour/updateParlour', formData);
+
+      // ✅ Fetch updated data from backend
+      await this.$store.dispatch("parlour/parlour", this.parlour.parlour.id);
+        // ✅ Update Local State Immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (this.editingImage === 'profile') {
+          this.parlour.parlour.image = e.target.result.split(",")[1]; // Extract base64 part
+        } else {
+          this.parlour.parlour.coverImage = e.target.result.split(",")[1];
+        }
+      };
+      reader.readAsDataURL(this.selectedImage);
+
+      alert("Image updated successfully.");
+      this.imageDialog = false;
+      this.$router.push({ name: "parlourHome" });
+    } catch (error) {
+      console.error("Failed to update image:", error);
+      alert("An error occurred while updating the image.");
+    }
+  },
+    async saveChanges() {
+      try {
+        const formData = new FormData();
+        formData.append("id", this.parlour.parlour.id); // Ensure ID is included
+        formData.append("parlourName", this.editedCard.parlourName);
+        formData.append("email", this.editedCard.email);
+        formData.append("phoneNumber", this.editedCard.phoneNumber);
+
+        console.log("Updating parlour with data:", [...formData.entries()]);
+        await this.$store.dispatch('parlour/updateParlour', formData);
+       
+        this.editDialog = false;
+        alert('Parlour information updated successfully.');
+        this.$nextTick(()=>{
+          console.log("Navigating to parlour profile...");
+          this.$router.push({ name: "parlourHome" });
+        });
+      } catch (error) {
+        console.error('Failed to update parlour:', error);
+        alert('An error occurred while updating the parlour.');
+      }
+    },
+    async fetchParlourDetails() {
+      try {
+        const payload = this.parlour?.parlour?.id;
+        if (!payload) {
+          console.warn("No parlour ID found.");
+          return;
+        }
+        console.log("Fetching parlour details for:", payload);
+        await this.$store.dispatch("parlour/parlour", payload);
+        this.showDialog = true;
+      } catch (error) {
+        console.error("Failed to fetch parlour details:", error);
+      }
+    },
+    async deleteParlour(){
+      const payload = this.parlour?.parlour?.id;
+      const confirmed = ("Are you want to delete this item?");
+      if(!confirmed) return;
+      const success = await this.$store.dispatch('parlour/deleteParlour',payload);
+      if(success){
+        alert("PArlour Deleted successfully");
+      }else{
+        alert("Failed to delete parlour. Please try again");
+      }
+    },
+    mounted() {
+      this.$store.dispatch("parlour/listParlour").catch(error => {
+        console.error("Failed to load parlour data:", error);
+      });
+      console.log("Initial parlour data:", this.parlour);
+    },
+    toggleDialog() {
+      this.showDialog = !this.showDialog;
+    },
+    openDialog() {
+      this.editedCard = { ...this.parlour.parlour };
+      this.showDialog = false;
+      this.editDialog = true;
     },
     logout() {
-      this.$router.push({ name:'parlourLogin'});
-      this.menuVisible=false;
-    },
-    gotoAppointPage(){
-      this.$router.push({name:'parlourAppoint'})
-    },
-    gotoEmployeePage(){
-      this.$router.push({name:'parlourEmployee'})
-    },
-    gotoServicePage(){
-      this.$router.push({name: 'parlourService'})
-    },
+      this.$router.push({ name: "parlourLogin" });
+    }
   }
 };
 </script>
@@ -202,4 +353,12 @@ export default {
   margin-left: 16px;
   margin-top: -50px;
 }
+.custom-dialog{
+  position: fixed !important;
+  top: 10px;
+  right: 10px; 
+  z-index: 9999 !important;
+  max-width: 400px;
+  }
+
 </style>

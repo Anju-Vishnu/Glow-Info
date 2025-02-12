@@ -12,10 +12,12 @@ import ParlourAppoint from "./components/Parlour/ParlourAppoint.vue";
 import ParlourService from "./components/Parlour/ParlourService.vue";
 import ParlourEmployee from "./components/Parlour/ParlourEmployee.vue";
 import ParlourFront from "./components/Parlour/ParlourFront.vue";
+import ParlourOffers from "./components/Parlour/ParlourOffers.vue";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path:"/parlourOffers",name:'parlourOffers',component:ParlourOffers},
     { path: "/parlourFront", name: 'parlourFront', component: ParlourFront},
     { path: "/parlourEmployee", name: 'parlourEmployee', component: ParlourEmployee},
     { path: "/parlourService", name: 'parlourService', component: ParlourService},

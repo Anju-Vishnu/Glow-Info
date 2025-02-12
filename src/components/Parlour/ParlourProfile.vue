@@ -7,91 +7,54 @@
       </template>
       <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-btn style="background-color: blue" @click="navparlourlogin">Parlour Login</v-btn>
+      <v-btn style="background-color: blue" @click="navparlourlogin">Login</v-btn>
     </v-app-bar>
 
     <!-- Profile Section -->
     <div class="profile-container">
       <v-card class="parlour-profile">
-        <v-card-title class="mt-5 ms-4">Parlour Information</v-card-title>
+        <v-card-title class="mt-5 ms-4 d-flex justify-space-between">
+          <span>Parlour Information</span>
+          <div>
+            <v-btn 
+              color="primary" 
+              small 
+              @click="openDialog(getListParlour.parlour)"
+              :disabled="!getListParlour || !getListParlour.parlour"
+            >Edit</v-btn>
+            <v-btn 
+              color="error" 
+              small 
+              @click="deleteProfile(getListParlour.parlour)"
+              :disabled="!getListParlour || !getListParlour.parlour"
+              >Delete</v-btn>
+          </div>
+        </v-card-title>
+
         <v-card-text class="py-0">
           <div class="profile-data ms-4">
             <table>
               <tr>
-                <td style="padding-right: 10px;"><strong>Parlour Name</strong></td>
-                <td style="padding-right: 10px;">:</td>
-                <td>{{ parlourProfile.name }}</td>
+                <td><strong>Parlour Name</strong></td>
+                <td>:</td>
+                <td>{{ getListParlour.parlour.parlourName }}</td>
               </tr>
               <tr>
                 <td><strong>Email</strong></td>
                 <td>:</td>
-                <td>{{ parlourProfile.email }}</td>
+                <td>{{ getListParlour.parlour.email }}</td>
               </tr>
               <tr>
                 <td><strong>Mobile Number</strong></td>
                 <td>:</td>
-                <td>{{ parlourProfile.phone }}</td>
+                <td>{{ getListParlour.parlour.phoneNumber }}</td>
               </tr>
             </table>
           </div>
-
-          <!-- Edit Dialog -->
-          <v-dialog v-model="editDialog" max-width="600px">
-            <v-card>
-              <v-card-title>Edit Parlour Information</v-card-title>
-              <v-card-text>
-                <v-text-field
-                  v-model="editedCard.parlourName"
-                  label="Parlour Name"
-                  required
-                  :rules="[v => !!v || 'Name is required']"
-                ></v-text-field>
-                <v-text-field
-                  v-model="editedCard.email"
-                  label="Email"
-                  required
-                  :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'E-mail must be valid']"
-                ></v-text-field>
-                <v-text-field
-                  v-model="editedCard.phone"
-                  label="Phone Number"
-                  required
-                  :rules="[v => !!v || 'Phone number is required']"
-                ></v-text-field>
-                <v-text-field
-                  v-model="editedCard.currentPassword"
-                  label="Current Password"
-                  required
-                  :rules="[v => !!v || 'Current Password is required']"
-                ></v-text-field>
-                <v-text-field
-                  v-model="editedCard.newPassword"
-                  label="New Password"
-                  required
-                  :rules="[v => !!v || 'New Password is required']"
-                ></v-text-field>
-                <v-text-field
-                  v-model="editedCard.confirmPassword"
-                  label="Confirm Password"
-                  required
-                  :rules="[v => !!v || 'Confirm Password is required']"
-                ></v-text-field>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn color="green" @click="saveChanges">Save</v-btn>
-                <v-btn color="red" @click="cancelChanges">Cancel</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
         </v-card-text>
-
-        <v-card-actions>
-          <v-btn class="btn1" @click="toggleEditDialog">Edit Profile</v-btn>
-          <v-btn class="btn1" @click="gotoParlourHome">Home</v-btn>
-        </v-card-actions>
       </v-card>
     </div>
-  </v-app>
+    </v-app>
 </template>
 
 <script>
@@ -100,109 +63,100 @@ import { mapGetters } from 'vuex';
 export default {
   data() {
     return {
-      editDialog: false,
-      editedCard: {
-        parlourName: '',
-        email: '',
-        phone: '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      },
-      parlourProfile: {
-        name: '',
-        email: '',
-        phone: ''
-      }
+      isEditMode:false,
+      // editedCard: {
+      //   parlourId: null,
+      //   parlourName: '',
+      //   email: '',
+      //   phoneNumber: '',
+      // },
     };
   },
   computed: {
     ...mapGetters('parlour', ['getParlour']),
     parlour() {
+      console.log("list",this.parlour);
       return this.getParlour;
-    }
+    },
   },
-  mounted() {
-    const profile = this.parlour;
-    if (profile) {
-      this.parlourProfile = {
-        name: profile.name || '',
-        email: profile.email || '',
-        phone: profile.phone || ''
-      };
+  mounted(){
+    this.isEditMode = this.$route.query.edit === true;
+    if(this.isEditMode){
+      this.editDialog = true;
     }
+    this.fetchParlour();
+    this.$store.dispatch("parlour/listParlour");
   },
   methods: {
     navparlourlogin() {
-      this.$router.push({ name: 'ParlourLogin' });
+      this.$router.push({ name: 'parlourLogin' });
     },
-    gotoParlourHome() {
-      this.$router.push({ name: 'parlourHome' });
+    cancelChanges(){
+      this.$router.push({ name: 'parlourProfile' });
     },
-    toggleEditDialog() {
-      this.editedCard.parlourName = this.parlourProfile.name;
-      this.editedCard.email = this.parlourProfile.email;
-      this.editedCard.phone = this.parlourProfile.phone;
-      this.editedCard.currentPassword = '';
-      this.editedCard.newPassword = '';
-      this.editedCard.confirmPassword = '';
-
-      this.editDialog = !this.editDialog;
+    openDialog(parlour){
+      this.fetchParlour().then(()=>{
+        this.editedCard = { ...parlour }; 
+        this.editDialog=true;
+      })
     },
-    async saveChanges() {
+    // async fetchParlour(){
+    //   try{
+    //     const payload=this.getListParlour.parlour.id;
+    //     console.log("Fetching parlour for:",payload);
+    //     const success = await this.$store.dispatch("parlour/listParlour", payload);
+    //     if (!success) throw new Error("Failed to fetch parlour");
+    //   } catch (error) {
+    //     console.error('Failed to fetch parlour:', error);
+    //   }
+    // },
+    editService(service) {
+      alert(`Editing service: ${service.itemName}`);
+    },
+    deleteService(service) {
+      alert(`Deleting service: ${service.itemName}`);
+    },
+    // async editProfile() {
+    //   //const payload=this.parlour.id;
+    //   try {
+    //     const res =  await this.$store.dispatch('parlour/updateParlour',this.editedCard);
+    //      if(res) {
+    //       alert(`Successfully updated ${this.editedCard.parlourName}`);
+    //       this.$store.dispatch('parlour/listParlour');
+    //       this.editDialog = false;
+    //      }    
+    //   } catch (error) {
+    //     console.error('Failed to edit parlour:', error);
+    //     alert('An error occurred while editing the parlour.');
+    //   }
+    // },
+    // async saveChanges() {
+    //   try {
+    //     await this.$store.dispatch('parlour/updateParlour', this.editedCard);
+    //     this.editDialog = false;
+    //     alert('Parlour information updated successfully.');
+    //   } catch (error) {
+    //     console.error('Failed to update parlour:', error);
+    //     alert('An error occurred while updating the parlour.');
+    //   }
+    // },
+    async deleteProfile(profile) {
+      const payload=this.getListParlour.parlour.id;
       try {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(this.editedCard.email)) {
-          alert('Please enter a valid email address.');
-          return;
+        const confirmed = await this.$store.dispatch("parlour/deleteParlour", payload);
+        if(confirmed){
+          alert(`Successfully deleted ${profile.parlourName}`);
+          this.$store.dispatch("parlour/listParlour"); // Refresh list
         }
-
-        if (this.editedCard.newPassword !== this.editedCard.confirmPassword) {
-          alert('New Password and Confirm Password must match.');
-          return;
-        }
-
-        await this.$store.dispatch('parlour/updateParlour', {
-          name: this.editedCard.parlourName,
-          email: this.editedCard.email,
-          phone: this.editedCard.phone
-        });
-
-        // Update local profile
-        this.parlourProfile.name = this.editedCard.parlourName;
-        this.parlourProfile.email = this.editedCard.email;
-        this.parlourProfile.phone = this.editedCard.phone;
-
-        // Reset form
-        this.editedCard = {
-          parlourName: '',
-          email: '',
-          phone: '',
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        };
-
-        this.editDialog = false;
       } catch (error) {
-        console.error('Error saving parlour data:', error);
-        alert('Failed to save the changes');
+        console.error("Failed to delete parlour:", error);
+        alert("An error occurred while deleting the parlour.");
       }
     },
-    cancelChanges() {
-      this.editedCard = {
-        parlourName: '',
-        email: '',
-        phone: '',
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      };
-      this.editDialog = false;
-    }
-  }
+  },
 };
 </script>
+
 
 <style scoped>
 .custom-gradient {

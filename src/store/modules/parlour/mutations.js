@@ -8,7 +8,11 @@ export default {
     },
     setParlour(state, payload) {
         state.parlour = payload;
-        sessionStorage.setItem('parlour', payload);  // Optional: Store token in sessionStorage
+        sessionStorage.setItem('parlour', JSON.stringify(payload));  // Optional: Store token in sessionStorage
+    },
+    setListParlour(state,payload){
+        state.listParlour=payload;
+        sessionStorage.setItem('listParlour',payload);
     },
     setServiceList(state, payload) {
         state.serviceList = payload;
@@ -25,5 +29,29 @@ export default {
     setServiceSubsubCategory(state,payload){
         state.serviceSubsubCategory = payload;
         sessionStorage.setItem('serviceSubsubCategory',payload);
+    },
+    setListService(state,payload){
+        state.listService=payload;
+        sessionStorage.setItem('listService',payload);
+    },
+    setUpdatePassword(state,payload){
+        state.updatPassword=payload;
+        sessionStorage.setItem('updatePassword',payload);
+    },
+    setAddEmployee(state,payload){
+        state.employees.payload;
+        sessionStorage.setItem('addEmployee',payload);
+    },
+    setListEmployee(state,payload){
+         state.employees=payload;
+         sessionStorage.setItem('listEmployee',payload);
+    },
+    setAddAppointment(state,payload){
+        state.addAppoint=payload;
+        sessionStorage.setItem('addAppoint', payload)
+    },
+    setOfferList(state,payload){
+        state.offerList=payload;
+        sessionStorage.setItem('offerList',payload);
     },
 };

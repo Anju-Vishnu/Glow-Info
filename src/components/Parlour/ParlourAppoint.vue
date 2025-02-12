@@ -1,19 +1,17 @@
 <template>
-  <v-app style="background-color: #feb47b; width: 100%; max-width: 1600px;">
-    <v-container fluid>
-      <v-card class="mx-auto" color="grey-lighten-3" max-width="1208">
-        <!-- App Bar Section -->
-        <v-app-bar color="teal-darken-4" class="custom-gradient">
-          <template v-slot:prepend>
-            <i class="fas fa-cut"></i>
-          </template>
-          <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
-          <v-spacer></v-spacer>
-        </v-app-bar>
+  <v-app>
+    <!-- App Bar Section -->
+    <v-app-bar class="custom-gradient">
+      <template v-slot:prepend>
+        <i class="fas fa-cut"></i>
+      </template>
+      <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
+      <v-spacer></v-spacer>
+    </v-app-bar>
   
         <!-- Content Section -->
-        <v-container fluid class="d-flex flex-column h-100 align-items-center">
-          <v-card class="maintable" style="width: 90%; padding: 20px;">
+        <v-container fluid>
+          <v-card class="maintable mt-5 pa-4">
             <v-card-title class="d-flex justify-content-between align-items-center w-100 ms-4 mt-3 pt-4">
               <h5>Appointment Status</h5>
               <v-select
@@ -78,56 +76,27 @@
             </v-card-text>
           </v-card>
         </v-container>
-      </v-card>
-    </v-container>
   </v-app>
   </template>
   
-  
   <script>
+  import { mapActions, mapGetters } from 'vuex';
+
   export default {
     name: 'parlourAppointment',
     data() {
       return {
         selectedPeriod: 'Monthly',
-        services: [
-          {
-            clientName: 'Maya',
-            service: 'Spa',
-            assistant: 'Anju',
-            date:'19/12/2024',
-            time: '09:00 AM',
-            status: 'Waiting' // Possible statuses: Waiting, In Progress, Completed
-          },
-          {
-            clientName: 'Vinu',
-            service: 'Facial',
-            assistant: 'Priya',
-            date:'25/12/2024',
-            time: '11:30 AM',
-            status: 'Waiting' // Possible statuses: Waiting, In Progress, Completed
-          },
-          {
-            clientName: 'Vidhya',
-            service: 'Nail Art',
-            assistant: 'Pooja',
-            date:'23/12/2024',
-            time: '10:30 AM',
-            status: 'Waiting' // Possible statuses: Waiting, In Progress, Completed
-          },
-          {
-            clientName: 'Sandra',
-            service: 'Hair Cut',
-            assistant: 'Payal',
-            date:'30/12/2024',
-            time: '11:30 AM',
-            status: 'Waiting' // Possible statuses: Waiting, In Progress, Completed
-          },
-        ],
+        // showElement: true,
+        services: [],
       };
     },
     computed: {
+      ...mapGetters(['getAddAppoint']),
       filteredServices() {
+        if (!this.getAppointments || !Array.isArray(this.getAppointments)) {
+          return []; // Return an empty array if appointments are undefined or not an array
+        }
         const today = new Date();
         const weekFromToday = new Date(today);
         weekFromToday.setDate(today.getDate() + 7);
@@ -157,17 +126,21 @@
       },
     },
     methods: {
+      ...mapActions(['addAppoint']),
       markStart(index) {
-        this.services[index].status = 'Start';
+        this.getAddAppoint[index].status = 'Start';
       },
       markInProgress(index) {
-        this.services[index].status = 'In Progress';
+        this.getAddAppoint[index].status = 'In Progress';
       },
       markComplete(index){
-        this.services.splice(index,1);
+        this.getAddAppoint.splice(index,1);
       },
-    }
-  };
+    },
+    created() {
+      this.addAppoint()
+    },
+};
   </script>
   
   <style scoped>
@@ -243,14 +216,27 @@
     display: flex;
     justify-content: end;
   }
-  .custom-gradient {
-    background-image: linear-gradient(135deg, #ff7e5f, #feb47b);
-  }
-
   @media (max-width: 768px) {
   .table-row {
     flex-direction: column;
   }
+}
+.bgimage {
+  background-image: url("@/assets/beauty3.jpg");
+  background-size: cover; /* Ensures the image covers the entire area */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  height: 100%; /* Ensures it covers the full height of the parent */
+  width: 100%; /* Ensures it covers the full width of the parent */
+}
+.custom-gradient {
+  background-image: linear-gradient(135deg, #f575c0, #d8794d);
+}
+.app-bar-title {
+  margin-left: 2px;
+  font-size: 30px;
+  font-weight: 800;
+  font-family: 'Lucida Sans', sans-serif;
 }
 
   </style>

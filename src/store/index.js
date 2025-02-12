@@ -15,7 +15,9 @@ const store=createStore({
     },
     state(){
         return{
-            baseUrl:'http://192.168.1.2:8086',
+                //   baseUrl:'http://192.168.1.150:8080/api',
+               baseUrl:'http://localhost:8081/api',
+
         }
     },
     mutations: rootMutations,

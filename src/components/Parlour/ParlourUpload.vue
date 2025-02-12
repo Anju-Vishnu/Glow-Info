@@ -10,12 +10,10 @@
     </v-app-bar>
 
     <v-main>
-      <!-- Container for centering the card -->
       <v-container fluid class="d-flex justify-center align-center" style="min-height: 100vh" width="1300px">
         <v-card class="pa-4">
           <v-form ref="form" enctype="multipart/form-data">
             <v-row>
-              <!-- Profile Photo Upload -->
               <v-col cols="12" sm="3">
                 <v-file-input
                   ref="profilePhoto"
@@ -24,20 +22,15 @@
                   :rules="parlourPhotoRules"
                   accept="image/*"
                   outlined
-                  :key="parlourProfilePhoto?.name || ''"
+                  clearable
                   @change="handlePhotoUpload"
-                  error-messages="Please upload a valid profile photo"
+                  :error-messages="profilePhotoError"
                 />
-
                 <v-card v-if="profilePreviewUrl" class="mt-4">
                   <v-img :src="profilePreviewUrl" height="200px" class="preview-image"></v-img>
-                  <v-card-actions>
-                    <v-btn @click="clearPhoto" aria-label="Remove Profile Photo">Remove</v-btn>
-                  </v-card-actions>
                 </v-card>
               </v-col>
 
-              <!-- Cover Photo Upload -->
               <v-col cols="12" sm="3">
                 <v-file-input
                   ref="coverPhoto"
@@ -46,20 +39,15 @@
                   :rules="parlourCoverRules"
                   accept="image/*"
                   outlined
-                  :key="parlourCoverPhoto?.name || ''"
+                  clearable
                   @change="handleCoverUpload"
-                  error-messages="Please upload a valid cover photo"
+                  :error-messages="coverPhotoError"
                 />
-
                 <v-card v-if="coverPreviewUrl" class="mt-4">
                   <v-img :src="coverPreviewUrl" height="200px"></v-img>
-                  <v-card-actions>
-                    <v-btn @click="clearCover" aria-label="Remove Cover Photo">Remove</v-btn>
-                  </v-card-actions>
                 </v-card>
               </v-col>
 
-              <!-- License Photo Upload -->
               <v-col cols="12" sm="3">
                 <v-file-input
                   ref="licensePhoto"
@@ -68,35 +56,22 @@
                   :rules="parlourLicenseRules"
                   accept="image/*"
                   outlined
-                  :key="parlourLicensePhoto?.name || ''"
+                  clearable
+                  :error-messages="profileLicenseError"
                   @change="handleLicenseUpload"
-                  error-messages="Please upload a valid license photo"
                 />
-
                 <v-card v-if="licensePreviewUrl" class="mt-4">
                   <v-img :src="licensePreviewUrl" height="200px"></v-img>
-                  <v-card-actions>
-                    <v-btn @click="clearLicense" aria-label="Remove License Photo">Remove</v-btn>
-                  </v-card-actions>
                 </v-card>
               </v-col>
 
-              <!-- Location Upload -->
               <ParlourLocation @childValues="handleLocation" />
               <v-col cols="12" sm="3">
-                <v-text-field
-                  v-model="latitude"
-                  label="Lat:"
-                  variant="underlined"
-                ></v-text-field>
-                <v-text-field
-                  v-model="longitude"
-                  label="Long:"
-                  variant="underlined"
-                ></v-text-field>
+                <v-text-field v-model="latitude" label="Lat:" variant="underlined"></v-text-field>
+                <v-text-field v-model="longitude" label="Long:" variant="underlined"></v-text-field>
+                <v-text-field v-model="locationName" label="Location" variant="underlined"></v-text-field>
               </v-col>
 
-              <!-- Submit Button -->
               <v-col cols="12">
                 <v-btn class="btn" @click="submit" :loading="loading" :disabled="loading" aria-label="Submit Form">
                   Submit
@@ -144,6 +119,7 @@ export default {
       location: '',
       latitude: '',
       longitude: '',
+      locationName: '',
       loading: false,
       profilePreviewUrl: null,
       coverPreviewUrl: null,
@@ -161,44 +137,31 @@ export default {
       if (file) {
         this.profilePreviewUrl = URL.createObjectURL(file);
         this.parlourProfilePhoto = file;
-        this.$refs.profilePhoto.resetValidation();
+        this.$nextTick(() => {
+          this.$refs.profilePhoto.resetValidation();
+        });
       }
-    },
-    clearPhoto() {
-      this.parlourProfilePhoto = null;
-      this.profilePreviewUrl = null;
-      this.$refs.profilePhoto.reset();
     },
     handleCoverUpload(event) {
       const file = event.target.files[0];
       if (file) {
         this.coverPreviewUrl = URL.createObjectURL(file);
         this.parlourCoverPhoto = file;
-        this.$refs.coverPhoto.resetValidation();
+        this.$nextTick(() => this.$refs.coverPhoto.resetValidation());
       }
-    },
-    clearCover() {
-      this.parlourCoverPhoto = null;
-      this.coverPreviewUrl = null;
-      this.$refs.coverPhoto.reset();
     },
     handleLicenseUpload(event) {
       const file = event.target.files[0];
       if (file) {
         this.licensePreviewUrl = URL.createObjectURL(file);
         this.parlourLicensePhoto = file;
-        this.$refs.licensePhoto.resetValidation();
+        this.$nextTick(() => this.$refs.licensePhoto.resetValidation());
       }
-    },
-    clearLicense() {
-      this.parlourLicensePhoto = null;
-      this.licensePreviewUrl = null;
-      this.$refs.licensePhoto.reset();
     },
 
     // Handle the location selection
     handleLocation(coords) {
-      this.location = coords.locationName;
+      this.locationName = coords.locationName;
       this.latitude = coords.latitude;
       this.longitude = coords.longitude;
     },
@@ -210,7 +173,6 @@ export default {
       try {
         const formData = new FormData();
 
-        // Append fields to FormData
         formData.append('parlourName', this.uploadedDetails.name);
         formData.append('phoneNumber', this.uploadedDetails.phone);
         formData.append('email', this.uploadedDetails.email);
@@ -218,7 +180,7 @@ export default {
         formData.append('licenseNumber', this.uploadedDetails.licenseNo);
         formData.append('password', this.uploadedDetails.password);
         formData.append('ratings', 0);
-        formData.append('location', this.location);
+        formData.append('location', this.locationName);
         formData.append('latitude', this.latitude);
         formData.append('longitude', this.longitude);
 
@@ -233,16 +195,23 @@ export default {
           formData.append('licenseImage', this.parlourLicensePhoto);
         }
 
-        // Make the API request with FormData
         const response = await this.$store.dispatch('parlour/ParlourReg', formData);
 
         if (response) {
           this.dialogVis = true;
         } else {
-          console.error('Submission failed.');
+          // Replace $alert with dialog for failure messages
+          this.dialogVis = true;
+          this.$nextTick(() => {
+            this.$refs.dialogTitle = 'Submission failed';
+          });
         }
       } catch (error) {
-        console.error('Error during submission:', error);
+        // Replace $alert with dialog for failure messages
+        this.dialogVis = true;
+        this.$nextTick(() => {
+          this.$refs.dialogTitle = `Error: ${error.message}`;
+        });
       } finally {
         this.loading = false;
       }
@@ -257,21 +226,9 @@ export default {
     reset() {
       this.$refs.form.reset();
       this.$refs.form.resetValidation();
-      this.clearPhoto();
-      this.clearCover();
-      this.clearLicense();
       this.location = '';
       this.latitude = '';
       this.longitude = '';
-    },
-
-    async convertFileToBinary(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsArrayBuffer(file);
-      });
     },
   },
 };
