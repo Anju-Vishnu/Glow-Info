@@ -1,7 +1,7 @@
 <template>
   <v-app class="bgimage">
     <v-card class="mx-auto">
-      <!-- App Bar Section -->
+      <!-- App Bar -->
       <v-app-bar class="custom-gradient">
         <template v-slot:prepend>
           <i class="fas fa-cut"></i>
@@ -26,16 +26,19 @@
                     :rules="[rules.required, rules.onlyLetters]"
                     required
                   ></v-text-field>
+
                   <v-file-input
                     label="Add Image"
                     accept="image/*"
+                    v-model="newEmployee.image"
                     outlined
-                    @change="handleFileUpload"
                   ></v-file-input>
+
                   <v-checkbox
                     label="Availability"
                     v-model="newEmployee.availability"
                   ></v-checkbox>
+
                   <v-btn
                     :loading="newEmployee.isLoading"
                     color="green"
@@ -57,12 +60,11 @@
                 <div class="table-cell">Actions</div>
               </div>
 
-              <div v-if="employees.length === 0" class="empty-state">
+              <div v-if="listEmployee.length === 0" class="empty-state">
                 No employee found.
               </div>
-              <div
-                class="table-row" v-for="(employee, index) in employees" :key="index"
-              >
+
+              <div class="table-row" v-for="(employee, index) in listEmployee" :key="index">
                 <div class="table-cell">{{ employee.id }}</div>
                 <div class="table-cell">{{ employee.empName }}</div>
                 <div class="table-cell">
@@ -76,38 +78,25 @@
                   <div v-else>No image uploaded</div>
                 </div>
                 <div class="table-cell actions">
-                  <v-btn color="primary" @click="openEditDialog(employee)"
-                    >Edit</v-btn
-                  >
-                  <v-btn color="red" @click="deleteEmployee(employee)"
-                    >Delete</v-btn
-                  >
+                  <v-btn color="primary" @click="openEditDialog(employee)">Edit</v-btn>
+                  <v-btn color="red" @click="() => deleteEmployee(employee)">Delete</v-btn>
                 </div>
               </div>
             </div>
 
             <!-- Employee Edit Dialog -->
             <v-dialog v-model="editDialog" max-width="500px">
-              <v-card>
+              <v-card>  <!-- Prevent undefined access -->
                 <v-card-title>
                   <span class="text-h5">Edit Employee</span>
                 </v-card-title>
                 <v-card-text>
                   <v-form ref="editForm">
-                    <v-text-field
-                      v-model="editData.empName"
-                      label="Employee Name"
-                      required
-                    ></v-text-field>
-                    <v-file-input
-                      label="Change Image"
-                      accept="image/*"
-                      @change="handleEditFileUpload"
-                    ></v-file-input>
-                    <v-switch
-                      v-model="editData.availability"
-                      label="Available"
-                    ></v-switch>
+                    <v-text-field v-model="editData.empName" label="Employee Name" required></v-text-field>
+
+                    <v-file-input label="Change Image" accept="image/*" v-model="editData.image"></v-file-input>
+
+                    <v-switch v-model="editData.availability" label="Available"></v-switch>
                   </v-form>
                 </v-card-text>
                 <v-card-actions>
@@ -118,18 +107,10 @@
             </v-dialog>
 
             <!-- Success Snackbar -->
-            <v-snackbar
-              v-model="successSnackbar"
-              timeout="3000"
-              color="success"
-              elevation="2"
-              bottom
-            >
+            <v-snackbar v-model="successSnackbar" timeout="3000" color="success" elevation="2" bottom>
               {{ successMessage }}
               <template v-slot:action>
-                <v-btn color="white" text @click="redirectToEmployeePage"
-                  >OK</v-btn
-                >
+                <v-btn color="white" text @click="redirectToEmployeePage">OK</v-btn>
               </template>
             </v-snackbar>
           </v-container>
@@ -155,10 +136,10 @@ export default {
         isLoading: false,
       },
       editData: {
+        id: null,
         empName: "",
         image: null,
         availability: false,
-        id: null,
       },
       rules: {
         required: (value) => !!value || "This field is required.",
@@ -169,83 +150,53 @@ export default {
   },
   computed: {
     ...mapGetters("parlour", ["getEmployee", "getParlour"]),
-    employees() {
-      console.log("List of Employees:", this.getEmployee);
-      return this.getEmployee || [];
-    },
-    parlour() {
-      return this.getParlour;
-    },
-    addEmployee(){
-      return this.getEmployeelist;
+    listEmployee() {
+      return this.getEmployee ? this.getEmployee.map((employee) => ({ ...employee })) : [];
     },
   },
   mounted() {
-      this.fetchEmployees();
+    this.fetchEmployees();
   },
   methods: {
-    openEditDialog(employee){
-      this.formData = { ...employee }; // Copy data to prevent modifying original before save
+    openEditDialog(employee) {
+      this.editData = { ...employee};
       this.editDialog = true;
-    },
-    handleFileUpload(event) {
-      this.newEmployee.image = event.target.files[0];
-    },
-    handleEditFileUpload(event) {
-      this.editData.image = event.target.files[0];
-    },
-    async employeeAdd() {
-      this.newEmployee.isLoading = true;
-      try {
-        const formData = new FormData();
-        formData.append("parlourId", this.parlour.parlour.id);
-        formData.append("employeeName", this.newEmployee.empName);
-        if (this.formData.image) formData.append("image", this.newEmployee.image);
-        formData.append("availability", this.newEmployee.availability);
-
-        const response = await this.$store.dispatch("parlour/addEmployee",formData);
-        if (response.success) {
-          this.showSuccessSnackbar("Employee added successfully!");
-          this.resetForm();
-          await this.fetchEmployees();
-        }
-      } catch (error) {
-        console.error("Error adding employee:", error);
-      } finally {
-        this.newEmployee.isLoading = false;
-      }
-    },
-    async fetchEmployees() {
-      try {
-        const payload = this.parlour.parlour.id;
-        console.log("Fetching employees for:", payload);
-        const response = await this.$store.dispatch("parlour/listEmployee", payload);
-        console.log("Fetched employees:", response);
-      } catch (error) {
-        console.error("Error fetching employees:", error);
-      }
     },
     async updateEmployee() {
       try {
-        const response = await this.$store.dispatch(
-          "parlour/updateEmployee",
-          this.editData
-        );
-        if (response.success) {
+        const payload = {
+          id: this.editData.id,
+          empName: this.editData.empName,
+          availability: this.editData.availability,
+        };
+
+        const success = await this.$store.dispatch("parlour/editEmployee", payload);
+
+        if (success) {
+          this.showSuccessSnackbar("Employee updated successfully!");
           this.editDialog = false;
           await this.fetchEmployees();
+        } else {
+          console.error("Failed to update employee.");
         }
       } catch (error) {
         console.error("Error updating employee:", error);
       }
     },
+    async fetchEmployees() {
+      try {
+        const parlourId = this.parlour.parlour.id;
+        if (parlourId) {
+          await this.$store.dispatch("parlour/listEmployee", parlourId);
+        }
+      } catch (error) {
+        console.error("Error fetching employees:", error);
+      }
+    },
     async deleteEmployee(employee) {
       if (confirm("Are you sure you want to delete this employee?")) {
         try {
-          const response = await this.$store.dispatch(
-            "parlour/deleteEmployee",
-            employee.id
-          );
+          const response = await this.$store.dispatch("parlour/deleteEmployee", employee.id);
           if (response.success) {
             await this.fetchEmployees();
           }
@@ -253,6 +204,14 @@ export default {
           console.error("Error deleting employee:", error);
         }
       }
+    },
+    showSuccessSnackbar(message) {
+      this.successMessage = message;
+      this.successSnackbar = true;
+    },
+    redirectToEmployeePage() {
+      this.successSnackbar = false;
+      this.$router.push("/employee");
     },
   },
 };

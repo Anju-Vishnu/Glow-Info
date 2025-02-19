@@ -43,7 +43,7 @@ export default {
         sessionStorage.setItem('addEmployee',payload);
     },
     setListEmployee(state,payload){
-         state.employees=payload;
+         state.listEmployee=payload;
          sessionStorage.setItem('listEmployee',payload);
     },
     setAddAppointment(state,payload){

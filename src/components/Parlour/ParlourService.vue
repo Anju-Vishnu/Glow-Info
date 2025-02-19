@@ -227,7 +227,7 @@ export default {
     };
   },
   computed: {
-    ...mapGetters("parlour", ["getServiceList","getServiceCategory", "getServiceSubCategory", "getServiceSubsubCategory", "getParlour","getService"]),
+    ...mapGetters("parlour", ["getServiceCategory", "getServiceSubCategory", "getServiceSubsubCategory", "getParlour","getService"]),
     categories() {
       return this.getServiceCategory;
     },
@@ -248,10 +248,7 @@ export default {
         description: service.description || "No description available"
       }));
     },
-    serviceList(){
-      return this.getServiceList;
-    },
-  },
+},
   mounted() {
     this.fetchService();
     this.$store.dispatch("parlour/serviceCategory");

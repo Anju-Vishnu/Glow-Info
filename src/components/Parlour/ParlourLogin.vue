@@ -127,6 +127,15 @@
             Submit
           </v-btn>
         </v-card-actions>
+        <v-dialog v-model="showApprovalDialog" max-width="400">
+          <v-card>
+            <v-card-title>Approval Pending</v-card-title>
+            <v-card-text>Your parlour is awaiting approval. Please check back later.</v-card-text>
+            <v-card-actions>
+              <v-btn color="primary" @click="showApprovalDialog = false">OK</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-card>
     </v-dialog>
   </v-app>
@@ -149,6 +158,7 @@ export default {
     otp:'',
     otpSent: false, // Track if OTP has been sent
     otpError: "",   // Track OTP-specific errors
+    showApprovalDialog: false,
   }),
 
   methods: {

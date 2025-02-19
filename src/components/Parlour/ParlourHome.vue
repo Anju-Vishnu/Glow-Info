@@ -215,7 +215,34 @@ export default {
     };
   },
   methods: {
-  // Open dialog for profile or cover image
+    async confirmApproval(){
+      try{
+        const payload = this.parlour?.parlour?.id;
+        if (!payload) {
+          console.warn("No parlour ID found.");
+          return;
+        }
+        const response = await this.$store.dispatch("parlour/confirmApprove", payload);
+        
+      if (response && response.approved !== undefined) {
+        if(response.approved){
+          this.$router.push({name: 'parlourHome'});
+        }else{
+          alert("Your approval is still pending");
+        }
+        return response.approved;
+      }else{
+        console.error("Invalid response format:", response);
+        alert("Failed to retrieve approval status.");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking approval status:", error);
+      alert("An error occurred while checking approval status.");
+      return false;
+    }
+  },
+   // Open dialog for profile or cover image
   openImageDialog(type) {
     this.editingImage = type;
     this.previewImage = type === 'profile' 
@@ -312,6 +339,7 @@ export default {
       }
     },
     mounted() {
+      this.confirmApproval();
       this.$store.dispatch("parlour/listParlour").catch(error => {
         console.error("Failed to load parlour data:", error);
       });
@@ -327,7 +355,7 @@ export default {
     },
     logout() {
       this.$router.push({ name: "parlourLogin" });
-    }
+    },
   }
 };
 </script>

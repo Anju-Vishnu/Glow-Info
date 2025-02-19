@@ -1,6 +1,24 @@
 import axios from "axios";
   
 export default {
+    // Parlour Registration
+    async ParlourReg({ rootGetters }, payload) {
+        try {
+            const response = await axios.post(
+                `${rootGetters.getBaseUrl}/parlour/ParlourReg`,
+                payload
+            );
+
+            if (response.status >= 200 && response.status < 300) {
+                console.log('Registration Successful');
+                return response.data;
+            }
+            }catch (error) {
+            console.error(error);
+            return error.response;
+        }
+    },
+
     // Parlour Login
     async ParlourLogin({ rootGetters, commit }, payload) {
         try {
@@ -16,6 +34,27 @@ export default {
             console.error(error);
         }
     },
+    //Approve Parlour
+    async confirmApprove({rootGetters,getters},payload){
+        try {
+            const response = await axios.get(
+                `${rootGetters.getBaseUrl}/parlour/ParlourStatus?parlourId=${payload}`,
+                payload,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${getters.getToken}`
+                        }
+                    }
+                );
+                if (response.status >= 200 && response.status < 300) { 
+                    return true;
+                }
+            } catch (error) {
+                console.error(error);
+                return false;
+            } 
+        },
+
     // Forgot Password
     async UpdatePassword({rootGetters},payload){
         try{
@@ -50,41 +89,7 @@ export default {
             }
       },
     
-    // Parlour Registration
-    async ParlourReg({ rootGetters }, payload) {
-        try {
-            const response = await axios.post(
-                `${rootGetters.getBaseUrl}/parlour/ParlourReg`,
-                payload
-            );
-
-            if (response.status >= 200 && response.status < 300) {
-                console.log('Registration Successful');
-                return response.data;
-            }
-            }catch (error) {
-            console.error(error);
-            return error.response;
-        }
-    },
-    // // Get Parlour
-    // async listParlour({rootGetters,commit},payload){
-    //     try{
-    //         const response =await axios.get(
-    //         `${rootGetters.getBaseUrl}/parlour/${payload}`);
-    //         if(response.status>=200 && response.status<300){
-    //             console.log('List of Parlour Details',response.data)
-    //             commit('List of parlours', response.data);
-    //             return response.data;
-    //         }else{
-    //             throw new Error(`Unexpected response status: ${response.status}`); 
-    //         }
-    //     }catch(error){
-    //         console.error("Error fetching services", error.response?.data || error.message);
-    //         throw error;
-    //     }
-    // },
-    // Update Parlour
+      // Update Parlour
     async updateParlour({ rootGetters, getters},formData) {
         try {
             const response = await axios.put(
@@ -300,7 +305,7 @@ export default {
 
     async editOffer({rootGetters,getters},payload){
         try {
-         const response = await axios.post(
+         const response = await axios.put(
             `${rootGetters.getBaseUrl}/offer-categories/all`, 
             payload,
             {
@@ -361,25 +366,28 @@ export default {
             throw new Error(error.response?.data?.message || 'An unexpected error occurred.');
         }
     },
-    async editEmployee({rootGetters,getters},payload){
+    async editEmployee({ rootGetters, getters }, payload) {
         try {
-         const response = await axios.post(
-            `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${payload}`, 
-            payload,
-            {
-                headers:{
-                 Authorization: `Bearer ${getters.getToken}`
+            const response = await axios.put(
+                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${payload.id}`, // Use payload.id
+                payload, // Send the payload object
+                {
+                    headers: {
+                        Authorization: `Bearer ${getters.getToken}`,
+                        "Content-Type": "application/json",
+                    },
                 }
+            );
+    
+            if (response.status >= 200 && response.status < 300) {
+                return response.data; // Return response data if needed
             }
-        );
-
-        if (response.status >= 200 && response.status < 300) { 
-            return true;
-        } return false;
+            return false;
         } catch (error) {
-            console.error(error);
+            console.error("Error updating employee:", error);
+            return false;
         }
-    },
+    },    
     async deleteEmployee({ rootGetters, getters }, payload) {
         try {
           const response = await axios.delete(
@@ -400,7 +408,7 @@ export default {
           return false;
         }
       },
-
+        //Fetching Employee
       async listEmployee({ rootGetters, getters, commit }, payload) {
         try {
           const response = await axios.get(
@@ -422,27 +430,27 @@ export default {
           return false;
         }
       },
-      async getEmployeeById({rootGetters,getters,commit},payload){
-        try{
-            const response = await axios.get(
-                `${rootGetters.getBaseUrl}/employees/employeeById?employeeId=${payload}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${getters.getToken}`,
-                  },
-                }
-              );
+    //   async getEmployeeById({rootGetters,getters,commit},payload){
+    //     try{
+    //         const response = await axios.get(
+    //             `${rootGetters.getBaseUrl}/employees/employeeById?employeeId=${payload}`,
+    //             {
+    //               headers: {
+    //                 Authorization: `Bearer ${getters.getToken}`,
+    //               },
+    //             }
+    //           );
           
-              if (response.status >= 200 && response.status < 300) {
-                commit('setListEmployee', response.data); 
-                return true;
-              }
-            return false;
-        }catch(error){
-            console.error(error);
-          return false;
-        }
-      },
+    //           if (response.status >= 200 && response.status < 300) {
+    //             commit('setListEmployee', response.data); 
+    //             return true;
+    //           }
+    //         return false;
+    //     }catch(error){
+    //         console.error(error);
+    //       return false;
+    //     }
+    //   },
     //   Appointment
       async addAppoint({rootGetters,getters,commit}) {
         try {
