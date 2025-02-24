@@ -6,7 +6,7 @@
       </template>
       <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
       <v-spacer></v-spacer>
-      <v-btn class="btn" @click="navparlourlogin" aria-label="Navigate to Parlour Login">Parlour Login</v-btn>
+      <v-btn class="btn" @click="navparlourlogin">Parlour Login</v-btn>
     </v-app-bar>
 
     <v-main>
@@ -230,6 +230,9 @@ export default {
       this.latitude = '';
       this.longitude = '';
     },
+    navparlourlogin(){
+        this.$router.push({ name: 'parlourLogin' });
+      },
   },
 };
 </script>

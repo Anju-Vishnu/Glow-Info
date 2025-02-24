@@ -15,9 +15,9 @@ const store=createStore({
     },
     state(){
         return{
-            // baseUrl:'http://192.168.1.150:8080/api',
-             baseUrl:'http://localhost:8086/api',
-            //    baseUrl:'http://192.168.1.2:8086/api',
+            //   baseUrl:'http://192.168.1.150:8080/api',
+              baseUrl:'http://localhost:8086/api',
+               //  baseUrl:'http://192.168.1.16:8086/api',
 
         }
     },

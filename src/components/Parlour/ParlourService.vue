@@ -101,7 +101,6 @@
                     label="Availability"
                     v-model="newService.availability"
                   ></v-checkbox>
-
                   <v-btn type="submit" color="primary" :loading="loading">Add Service</v-btn>
                 </v-form>
 
@@ -138,6 +137,7 @@
                     </div>
                     <div class="table-cell actions">
                       <v-btn color="primary" @click="openEditDialog(service)">Edit</v-btn>
+                      <v-btn color="error" @click="deleteService(service)">Delete</v-btn>
                       <!-- Edit Service Dialog -->
                       <v-dialog v-model="editDialog" max-width="500px">
                         <v-card>
@@ -162,7 +162,7 @@
                           </v-card-actions>
                         </v-card>
                       </v-dialog>
-                      <v-btn color="error" @click="deleteService(service)">Delete</v-btn>
+                      
                     </div>
                   </div>
                 </div>
@@ -489,43 +489,41 @@ h2 {
   overflow: hidden;
   background: white;
 }
-
-.table-header {
-  display: flex;
-  background-color: #4CAF50;
-  color: white;
-  font-weight: bold;
-  padding: 12px;
-}
-
-.table-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.table-row {
-  display: flex;
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
-  background-color: #fff;
-  transition: background 0.3s;
-}
-
+.table-header, .table-row {
+    display: flex;
+    padding: 10px;
+  }
+  
+  .table-header .table-cell {
+    background-color: #080808;
+    color: white;
+  }
+  
+  .table-cell {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px; /* Adjusted font size for better readability */
+    color: #0f0101;
+  }
+  
+  .table-body {
+    display: flex;
+    flex-direction: column;
+    background-color: #ac7a1e;
+  }
+  
+  .table-row {
+    border-top: 1px solid #070707;
+    background-color: white;
+  }
+  
 .table-row:hover {
   background-color: #f5f5f5;
 }
-
-.table-cell {
-  flex: 1;
-  padding: 8px;
-  text-align: left;
-}
-
 .actions {
   display: flex;
   gap: 10px;
 }
-
 .empty-state {
   text-align: center;
   padding: 20px;

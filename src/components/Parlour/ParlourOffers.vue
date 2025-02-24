@@ -86,10 +86,7 @@
                   class="mb-4"
                 ></v-file-input>
               <v-btn
-                elevation="6"
-                rounded="xl"
-                class="mt-4"
-                block
+                color="blue"
                 type="submit"
                 :disabled="loading"
                 :loading="loading"
@@ -99,26 +96,14 @@
             </v-form>
 
             <!-- Display Offers -->
-            <v-btn @click="toggleItems" color="primary">
-                  {{ showItems ? 'Hide Items' : 'Show Items' }}
-                </v-btn>
-
-                <v-data-table
-                  v-if="showItems && services.items.length"
-                  :items="services.items"
-                  :headers="tableHeaders"
-                  item-value="id"
-                  class="mt-4"
-                >
-                  <template v-slot:top>
-                    <h2>Offer List</h2>
-                  </template>
-                  <!-- Custom Slot for actions -->
-                  <template v-slot:item.actions>
-                    <v-btn color="primary" @click="editOffer(item)">Edit</v-btn>
-                    <v-btn color="error" @click="deleteOffer(item)">Delete</v-btn>
-                  </template>
-                </v-data-table>
+            <template v-slot:top>
+              <h2>Offer List</h2>
+            </template>
+            <!-- Custom Slot for actions -->
+            <template v-slot:item.actions>
+              <v-btn color="primary" @click="editOffer(item)">Edit</v-btn>
+              <v-btn color="error" @click="deleteOffer(item)">Delete</v-btn>
+            </template>  
               </v-sheet>
             </v-col>
           </v-row>
@@ -260,12 +245,30 @@ export default {
   .custom-gradient {
     background-image: linear-gradient(135deg, #f575c0, #d8794d);
   }
-  
   .app-bar-title {
     margin-left: 2px;
     font-size: 30px;
     font-weight: 800;
     font-family: 'Lucida Sans', sans-serif;
   }
+  .table-header {
+  display: flex;
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  padding: 12px;
+}
+.table-cell {
+  flex: 1;
+  padding: 8px;
+  text-align: left;
+}
+.table-body {
+  display: flex;
+  flex-direction: column;
+}
+.table-row:hover {
+  background-color: #f5f5f5;
+}
 </style>
   

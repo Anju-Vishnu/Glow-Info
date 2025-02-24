@@ -8,7 +8,7 @@
         </template>
         <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
           <v-spacer></v-spacer>
-          <v-btn style="background-color: blue" @click="navparlourlogin">Parlour Login</v-btn>
+          <v-btn class="btn" @click="navparlourlogin">Parlour Login</v-btn>
         </v-app-bar> 
 
         <v-main>
@@ -47,14 +47,14 @@
                     :rules=" emailRules"
                   ></v-text-field>
                 </v-col>
-                <v-col cols="12" sm="6">
+                 <!-- <v-col cols="12" sm="6">
                   <v-radio-group v-model="category" :rules="categoryRules" outline class="d-flex align-center">
                     <label class="custom-field mt-1">Category</label>
                     <v-radio class="custom-field mr-4" label="Male" value="Men"></v-radio>
                     <v-radio class="custom-field mr-4" label="Female" value="Women"></v-radio>
                     <v-radio class="custom-field" label="Unisex" value="Unisex"></v-radio>
                   </v-radio-group>
-                </v-col>
+                </v-col>  -->
                 <v-col cols="12" sm="12">
                   <v-text-field
                     label="Description"
@@ -119,7 +119,7 @@ export default {
       name: '',
       phone: '',
       email: '',
-      category:'',
+      //category:'',
       description: '',
       licenseNo: '',
       password: '',
@@ -135,9 +135,9 @@ export default {
         (v) => !!v || 'Email is required',
         (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
       ],
-      categoryRules: [
-          (v) => !!v || "Category is required.",
-        ],
+      // categoryRules: [
+      //     (v) => !!v || "Category is required.",
+      //   ],
       passwordRules: [
         (v) => !!v || 'Password is required',
         (v) => v.length >= 8 || 'Password must be at least 8 characters long',
@@ -169,7 +169,7 @@ export default {
             name: this.name,
             phone: this.phone,
             email: this.email,
-            category:this.category,
+            // category:this.category,
             description: this.description,
             licenseNo: this.licenseNo,
             password: this.password,
@@ -180,7 +180,7 @@ export default {
             name: this.name,
             phone: this.phone,
             email: this.email,
-            category:this.category,
+            // category:this.category,
             description: this.description,
             licenseNo: this.licenseNo,
             password: this.password,
@@ -200,7 +200,7 @@ export default {
         this.name = '';
         this.phone = '';
         this.email = '';
-        this.category='';
+        // this.category='';
         this.description = '';
         this.licenseNo = '';
         this.password = '';
@@ -208,6 +208,9 @@ export default {
         this.$refs.form.resetValidation();
         this.$refs.form.reset();
       },     
+      navparlourlogin(){
+        this.$router.push({ name: 'parlourLogin' });
+      }, 
     },
   }
 
@@ -276,5 +279,11 @@ export default {
 }
 .custom-gradient {
   background-image: linear-gradient(135deg, #f575c0, #d8794d);
+}
+.btn{
+  width: 100%;
+  max-width: 150px;
+  box-shadow: black 2px;
+  background: linear-gradient(to left, #8d259b, #ff00bf);
 }
 </style>

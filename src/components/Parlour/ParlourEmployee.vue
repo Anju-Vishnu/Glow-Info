@@ -1,7 +1,7 @@
 <template>
   <v-app class="bgimage">
     <v-card class="mx-auto">
-      <!-- App Bar -->
+      <!-- App Bar Section -->
       <v-app-bar class="custom-gradient">
         <template v-slot:prepend>
           <i class="fas fa-cut"></i>
@@ -26,28 +26,25 @@
                     :rules="[rules.required, rules.onlyLetters]"
                     required
                   ></v-text-field>
-
                   <v-file-input
                     label="Add Image"
                     accept="image/*"
-                    v-model="newEmployee.image"
                     outlined
+                    @change="handleFileUpload"
                   ></v-file-input>
-
-                  <v-checkbox
+                  <!-- <v-checkbox
                     label="Availability"
                     v-model="newEmployee.availability"
-                  ></v-checkbox>
-
+                  ></v-checkbox> -->
                   <v-btn
                     :loading="newEmployee.isLoading"
-                    color="green"
+                    color="blue"
                     type="submit"
                     :disabled="newEmployee.isLoading"
                   >
                     Add Employee
                   </v-btn>
-                </v-form>
+                 </v-form>
               </v-card-text>
             </v-card>
 
@@ -57,60 +54,74 @@
                 <div class="table-cell">Id</div>
                 <div class="table-cell">Employee Name</div>
                 <div class="table-cell">Image</div>
+                <div class="table-cell">Availability</div>
                 <div class="table-cell">Actions</div>
               </div>
 
               <div v-if="listEmployee.length === 0" class="empty-state">
                 No employee found.
               </div>
-
               <div class="table-row" v-for="(employee, index) in listEmployee" :key="index">
                 <div class="table-cell">{{ employee.id }}</div>
                 <div class="table-cell">{{ employee.empName }}</div>
                 <div class="table-cell">
                   <v-img
-                    v-if="employee.img"
-                    :src="employee.img"
+                    v-if="employee.image"
+                    :src="employee.image"
                     max-height="80px"
                     max-width="80px"
                     class="custom-image"
                   ></v-img>
                   <div v-else>No image uploaded</div>
                 </div>
+                <!-- Availability Button -->
+                <div class="table-cell">
+                  <v-btn 
+                    :color="employee.availability ? 'green' : 'red'"
+                    @click="toggleAvailability(employee)"
+                  >
+                    {{ employee.availability ? 'Available' : 'Unavailable' }}
+                  </v-btn>
+                </div>
                 <div class="table-cell actions">
                   <v-btn color="primary" @click="openEditDialog(employee)">Edit</v-btn>
-                  <v-btn color="red" @click="() => deleteEmployee(employee)">Delete</v-btn>
+                  <v-btn color="red" @click="deleteEmployee(employee)">Delete</v-btn>
+                  <!-- Employee Edit Dialog -->
+                  <v-dialog v-model="editDialog" max-width="500px">
+                    <v-card>
+                      <v-card-title>
+                        <span class="text-h5">Edit Employee</span>
+                      </v-card-title>
+                      <v-card-text>
+                        <v-form ref="editForm">
+                          <v-text-field v-model="editData.empName" label="Employee Name" required></v-text-field>
+                          <v-file-input label="Change Image" accept="image/*" @change="handleEditFileUpload" ></v-file-input>
+                          <!-- <v-switch v-model="editData.availability" label="Available" ></v-switch> -->
+                        </v-form>
+                      </v-card-text>
+                      <v-card-actions>
+                        <v-btn color="grey" @click="editDialog = false">Cancel</v-btn>
+                        <v-btn color="green" @click="updateEmployee">Save</v-btn>
+                      </v-card-actions>
+                    </v-card>
+                  </v-dialog>
                 </div>
               </div>
             </div>
 
-            <!-- Employee Edit Dialog -->
-            <v-dialog v-model="editDialog" max-width="500px">
-              <v-card>  <!-- Prevent undefined access -->
-                <v-card-title>
-                  <span class="text-h5">Edit Employee</span>
-                </v-card-title>
-                <v-card-text>
-                  <v-form ref="editForm">
-                    <v-text-field v-model="editData.empName" label="Employee Name" required></v-text-field>
-
-                    <v-file-input label="Change Image" accept="image/*" v-model="editData.image"></v-file-input>
-
-                    <v-switch v-model="editData.availability" label="Available"></v-switch>
-                  </v-form>
-                </v-card-text>
-                <v-card-actions>
-                  <v-btn color="grey" @click="editDialog = false">Cancel</v-btn>
-                  <v-btn color="green" @click="updateEmployee">Save</v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-
-            <!-- Success Snackbar -->
-            <v-snackbar v-model="successSnackbar" timeout="3000" color="success" elevation="2" bottom>
+           <!-- Success Snackbar -->
+            <v-snackbar
+              v-model="successSnackbar"
+              timeout="3000"
+              color="success"
+              elevation="2"
+              bottom
+            >
               {{ successMessage }}
               <template v-slot:action>
-                <v-btn color="white" text @click="redirectToEmployeePage">OK</v-btn>
+                <v-btn color="white" text @click="redirectToEmployeePage"
+                  >OK</v-btn
+                >
               </template>
             </v-snackbar>
           </v-container>
@@ -126,20 +137,28 @@ import { mapGetters } from "vuex";
 export default {
   data() {
     return {
+      parlourId:"",
       editDialog: false,
       successSnackbar: false,
       successMessage: "",
       newEmployee: {
+        id:"",
         empName: "",
         image: null,
-        availability: false,
+        // availability: false,
         isLoading: false,
       },
+      tableHeader: [
+      { text: "Employee ID", value: "id" },
+      { text: "Employee Name", value: "employeeName" },
+      { text: "Image", value: "image" },
+      { text: "Availability", value: "availability" },
+      ],
       editData: {
-        id: null,
         empName: "",
         image: null,
         availability: false,
+        id: null,
       },
       rules: {
         required: (value) => !!value || "This field is required.",
@@ -150,53 +169,124 @@ export default {
   },
   computed: {
     ...mapGetters("parlour", ["getEmployee", "getParlour"]),
-    listEmployee() {
-      return this.getEmployee ? this.getEmployee.map((employee) => ({ ...employee })) : [];
+    parlour() {
+      return this.getParlour;
+    },
+
+    listEmployee(){
+      console.log(this.getEmployee); 
+      return this.getEmployee.map(employee => ({
+        ...employee,
+        image: employee.img || employee.image || null,
+      }));
     },
   },
   mounted() {
-    this.fetchEmployees();
+    console.log("Fetching employees...");
+    console.log("Parlour Data:", this.parlour);
+      this.fetchEmployees();
   },
   methods: {
-    openEditDialog(employee) {
-      this.editData = { ...employee};
+    openEditDialog(employee){
+      this.editData = { ...employee }; // Copy data to prevent modifying original before save
       this.editDialog = true;
     },
-    async updateEmployee() {
+    closeEditDialog() {
+      this.editDialog = false;
+      this.editData = { empName: "", image: null, availability: false, id: null };
+    },
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.newEmployee.image = file;
+        this.newEmployee.imagePreview = URL.createObjectURL(file); 
+      }
+    },
+    handleEditFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.editData.image = file;
+        this.editData.imagePreview = URL.createObjectURL(file);
+      }
+    },
+    async employeeAdd() {
+      console.log("Add Employee button clicked!");
+      this.newEmployee.isLoading = true;
+
       try {
-        const payload = {
-          id: this.editData.id,
-          empName: this.editData.empName,
-          availability: this.editData.availability,
-        };
+        if (!this.parlour || !this.parlour.parlour?.id) {
+          throw new Error("Invalid parlour data.");
+        }
+      
+        const formData = new FormData();
+        formData.append("parlourId", this.parlour.parlour.id);
+        formData.append("empName", this.newEmployee.empName);
+        if (this.newEmployee.image) {
+          formData.append("image", this.newEmployee.image);
+        }
+        // formData.append("availability", this.newEmployee.availability);
+      
+        const response = await this.$store.dispatch("parlour/addEmployee", formData);
+        console.log("Response from API:", response);
+      
+        if (response && response.success) {
+          this.showSuccessSnackbar("Employee added successfully!");
+          this.resetForm();
 
-        const success = await this.$store.dispatch("parlour/editEmployee", payload);
-
-        if (success) {
-          this.showSuccessSnackbar("Employee updated successfully!");
-          this.editDialog = false;
-          await this.fetchEmployees();
+          await this.fetchEmployees(); // ✅ Ensure we fetch the updated list
+          console.log("Updated employee list:", this.listEmployee);
         } else {
-          console.error("Failed to update employee.");
+          console.error("Error: API did not return success.");
         }
       } catch (error) {
-        console.error("Error updating employee:", error);
+        console.error("Error adding employee:", error);
+      } finally {
+        this.newEmployee.isLoading = false;
       }
     },
     async fetchEmployees() {
       try {
-        const parlourId = this.parlour.parlour.id;
-        if (parlourId) {
-          await this.$store.dispatch("parlour/listEmployee", parlourId);
+        if (!this.parlour || !this.parlour.parlour?.id) {
+          console.warn("Parlour ID is missing, cannot fetch employees.");
+          return;
+        }
+        const payload = this.parlour.parlour.id
+      
+        if(payload){
+          await this.$store.dispatch("parlour/listEmployee", payload);
+          console.log("Employees fetched successfully",this.listEmployee);
+        } else {
+          console.warn("Parlour ID is missing, cannot fetch employees.");
         }
       } catch (error) {
         console.error("Error fetching employees:", error);
       }
     },
+    async updateEmployee() {
+      try {
+        const formData = new FormData();
+        formData.append("id", this.editData.id); // Ensure ID is included
+        formData.append("empName", this.editData.empName);
+        formData.append("availability", this.editData.availability);
+
+        if (this.editData.image instanceof File) {
+          formData.append("image", this.editData.image);
+        }
+
+        const success = await this.$store.dispatch("parlour/editEmployee",formData);
+        if (success) {
+          this.showSuccessSnackbar("Employee updated successfully!");
+          this.editDialog = false;
+          await this.fetchEmployees();
+        } 
+      } catch (error) {
+        console.error("Error updating employee:", error);
+      }
+    },
     async deleteEmployee(employee) {
       if (confirm("Are you sure you want to delete this employee?")) {
         try {
-          const response = await this.$store.dispatch("parlour/deleteEmployee", employee.id);
+          const response = await this.$store.dispatch("parlour/deleteEmployee",employee.id);
           if (response.success) {
             await this.fetchEmployees();
           }
@@ -209,9 +299,41 @@ export default {
       this.successMessage = message;
       this.successSnackbar = true;
     },
+    async toggleAvailability(employee) {
+      try {
+        employee.availability = !employee.availability; // Toggle value
+      
+        const formData = new FormData();
+        formData.append("id", employee.id);
+        formData.append("empName", employee.empName);
+        formData.append("availability", employee.availability);
+      
+        if (employee.image) {
+          formData.append("image", employee.image);
+        }
+      
+        const response = await this.$store.dispatch("parlour/editEmployee", formData);
+        if (response) {
+          this.showSuccessSnackbar("Employee availability updated!");
+        }
+      } catch (error) {
+        console.error("Error updating availability:", error);
+      }
+    },
+    resetForm() {
+      this.$refs.form.reset();
+      this.newEmployee = {
+        empName: "",
+        image: null,
+        availability: false,
+        isLoading: false,
+      };
+      this.$refs.fileInput.value = ""; 
+    },
+
     redirectToEmployeePage() {
       this.successSnackbar = false;
-      this.$router.push("/employee");
+      this.$router.push({name: 'parlourEmployee'});
     },
   },
 };
@@ -225,27 +347,34 @@ export default {
 }
 
 /* Table Header Styling */
-.table-header {
-  display: flex;
-  background-color: #e0e0e0;
-  font-weight: bold;
-  margin-top: 30px;
-}
-
-.table-body .table-row {
-  display: flex;
-  border-bottom: 1px solid #ccc;
-  padding: 8px 0;
-}
-
-/* Table Cell Styling */
-.table-cell {
-  flex: 1;
-  padding: 10px;
-  text-align: center;
-  border-right: 1px solid #ccc;
-}
-
+.table-header, .table-row {
+    display: flex;
+    padding: 10px;
+  }
+  
+  .table-header .table-cell {
+    background-color: #080808;
+    color: white;
+  }
+  
+  .table-cell {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px; /* Adjusted font size for better readability */
+    color: #0f0101;
+  }
+  
+  .table-body {
+    display: flex;
+    flex-direction: column;
+    background-color: #ac7a1e;
+  }
+  
+  .table-row {
+    border-top: 1px solid #070707;
+    background-color: white;
+  }
+  
 .header {
   font-size: 16px;
   font-weight: bold;
@@ -289,5 +418,17 @@ export default {
   border-radius: 5px;
   overflow: hidden;
   background: white;
+}
+.table-cell {
+  flex: 1;
+  padding: 8px;
+  text-align: left;
+}
+.table-body {
+  display: flex;
+  flex-direction: column;
+}
+.table-row:hover {
+  background-color: #f5f5f5;
 }
 </style>

@@ -151,7 +151,7 @@
             ></v-text-field>
           </v-card-text>
         <v-card-actions>
-          <v-btn color="green" @click="saveChanges()">Save</v-btn>
+          <v-btn color="green" @click="editParlour()">Save</v-btn>
           <v-btn color="red" @click="editDialog = false">Cancel</v-btn>
       </v-card-actions>
         </v-card>
@@ -215,33 +215,33 @@ export default {
     };
   },
   methods: {
-    async confirmApproval(){
-      try{
-        const payload = this.parlour?.parlour?.id;
-        if (!payload) {
-          console.warn("No parlour ID found.");
-          return;
-        }
-        const response = await this.$store.dispatch("parlour/confirmApprove", payload);
+  //   async confirmApproval(){
+  //     try{
+  //       const payload = this.parlour?.parlour?.id;
+  //       if (!payload) {
+  //         console.warn("No parlour ID found.");
+  //         return;
+  //       }
+  //       const response = await this.$store.dispatch("parlour/confirmApprove", payload);
         
-      if (response && response.approved !== undefined) {
-        if(response.approved){
-          this.$router.push({name: 'parlourHome'});
-        }else{
-          alert("Your approval is still pending");
-        }
-        return response.approved;
-      }else{
-        console.error("Invalid response format:", response);
-        alert("Failed to retrieve approval status.");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error checking approval status:", error);
-      alert("An error occurred while checking approval status.");
-      return false;
-    }
-  },
+  //     if (response && response.approved !== undefined) {
+  //       if(response.approved){
+  //         this.$router.push({name: 'parlourHome'});
+  //       }else{
+  //         alert("Your approval is still pending");
+  //       }
+  //       return response.approved;
+  //     }else{
+  //       console.error("Invalid response format:", response);
+  //       alert("Failed to retrieve approval status.");
+  //       return false;
+  //     }
+  //   } catch (error) {
+  //     console.error("Error checking approval status:", error);
+  //     alert("An error occurred while checking approval status.");
+  //     return false;
+  //   }
+  // },
    // Open dialog for profile or cover image
   openImageDialog(type) {
     this.editingImage = type;
@@ -291,7 +291,7 @@ export default {
       alert("An error occurred while updating the image.");
     }
   },
-    async saveChanges() {
+    async editParlour() {
       try {
         const formData = new FormData();
         formData.append("id", this.parlour.parlour.id); // Ensure ID is included
@@ -339,7 +339,7 @@ export default {
       }
     },
     mounted() {
-      this.confirmApproval();
+      // this.confirmApproval();
       this.$store.dispatch("parlour/listParlour").catch(error => {
         console.error("Failed to load parlour data:", error);
       });

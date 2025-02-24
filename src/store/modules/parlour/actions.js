@@ -93,8 +93,7 @@ export default {
     async updateParlour({ rootGetters, getters},formData) {
         try {
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/parlour/update`,
-                formData,
+                `${rootGetters.getBaseUrl}/parlour/update`, formData,
                     {
                         headers: {
                             Authorization: `Bearer ${getters.getToken}`
@@ -223,7 +222,7 @@ export default {
     async updateService({ rootGetters, getters }, formData) {
         try {
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/Items/update?itemId=${formData}`, 
+                `${rootGetters.getBaseUrl}/Items/update?itemId=${formData.id}`, 
                 {
                     headers: {
                         Authorization: `Bearer ${getters.getToken}`
@@ -345,32 +344,33 @@ export default {
       },
 
     // Employee
-    async addEmployee({rootGetters,getters},payload){
+    async addEmployee({ rootGetters, getters }, formData) {
         try {
-         const response = await axios.post(
-            `${rootGetters.getBaseUrl}/employees/addEmployee`, 
-            payload,
-            {
-                headers:{
-                 Authorization: `Bearer ${getters.getToken}`
+            const response = await axios.post(
+                `${rootGetters.getBaseUrl}/employees/addEmployee`,
+                formData, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${getters.getToken}`
+                    }
                 }
+            );
+    
+            if (response.status >= 200 && response.status < 300) {
+                console.log('Employee added successfully:', response);
+                return response.data;  // Return the response data
             }
-        );
-
-        if (response.status >= 200 && response.status < 300) {
-            console.log('successfully:',response)
-            return response.data;
-        } 
         } catch (error) {
             console.error('Error adding employee:', error);
             throw new Error(error.response?.data?.message || 'An unexpected error occurred.');
         }
     },
-    async editEmployee({ rootGetters, getters }, payload) {
+    
+    async editEmployee({ rootGetters, getters }, formData) {
         try {
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${payload.id}`, // Use payload.id
-                payload, // Send the payload object
+                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${formData.id}`, 
+                formData,  // Include form data as request body
                 {
                     headers: {
                         Authorization: `Bearer ${getters.getToken}`,
@@ -380,56 +380,61 @@ export default {
             );
     
             if (response.status >= 200 && response.status < 300) {
-                return response.data; // Return response data if needed
+                console.log('Employee updated successfully:', response);
+                return response.data;
             }
             return false;
         } catch (error) {
             console.error("Error updating employee:", error);
+            throw new Error(error.response?.data?.message || 'Failed to update employee.');
+        }
+    },
+    
+    async deleteEmployee({ rootGetters, getters }, employeeId) {
+        try {
+            const response = await axios.delete(
+                `${rootGetters.getBaseUrl}/employees/delete?employeeId=${employeeId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${getters.getToken}`,
+                    },
+                }
+            );
+    
+            if (response.status >= 200 && response.status < 300) {
+                console.log('Employee deleted successfully');
+                return true;
+            }
             return false;
-        }
-    },    
-    async deleteEmployee({ rootGetters, getters }, payload) {
-        try {
-          const response = await axios.delete(
-            `${rootGetters.getBaseUrl}/employees/delete?employeeId=${payload}`,
-            {
-              headers: {
-                Authorization: `Bearer ${getters.getToken}`,
-              },
-            }
-          );
-      
-          if (response.status >= 200 && response.status < 300) {// Pass the correct ID
-            return true;
-          }
-        return false;
         } catch (error) {
-          console.error('Error deleting employee:', error);
-          return false;
+            console.error('Error deleting employee:', error);
+            throw new Error(error.response?.data?.message || 'Failed to delete employee.');
         }
-      },
-        //Fetching Employee
-      async listEmployee({ rootGetters, getters, commit }, payload) {
+    },
+    
+    async listEmployee({ rootGetters, getters, commit }, parlourId) {
         try {
-          const response = await axios.get(
-            `${rootGetters.getBaseUrl}/employees/by-parlourId?parlourId=${payload}`,
-            {
-              headers: {
-                Authorization: `Bearer ${getters.getToken}`,
-              },
+            const response = await axios.get(
+                `${rootGetters.getBaseUrl}/employees/by-parlourId?parlourId=${parlourId}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${getters.getToken}`,
+                    },
+                }
+            );
+    
+            if (response.status >= 200 && response.status < 300) {
+                commit('setListEmployee', response.data);
+                console.log('Employee list fetched successfully:', response.data);
+                return response.data;  // Return the fetched employee list
             }
-          );
-      
-          if (response.status >= 200 && response.status < 300) {
-            commit('setListEmployee', response.data); 
-            return true;
-          }
-        return false;
+            return false;
         } catch (error) {
-          console.error(error);
-          return false;
+            console.error('Error fetching employees:', error);
+            throw new Error(error.response?.data?.message || 'Failed to fetch employees.');
         }
-      },
+    },
+    
     //   async getEmployeeById({rootGetters,getters,commit},payload){
     //     try{
     //         const response = await axios.get(
