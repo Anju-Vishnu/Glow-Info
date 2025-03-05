@@ -93,7 +93,8 @@ export default {
     async updateParlour({ rootGetters, getters},formData) {
         try {
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/parlour/update`, formData,
+                `${rootGetters.getBaseUrl}/parlour/update`, 
+                formData,
                     {
                         headers: {
                             Authorization: `Bearer ${getters.getToken}`
@@ -101,7 +102,7 @@ export default {
                     }
                 );
                 if (response.status >= 200 && response.status < 300) { 
-                    return true;
+                    return {success: true};
                 }
             } catch (error) {
                 console.error(error);
@@ -369,7 +370,7 @@ export default {
     async editEmployee({ rootGetters, getters }, formData) {
         try {
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${formData.id}`, 
+                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${formData.get("id")}`, 
                 formData,  // Include form data as request body
                 {
                     headers: {
@@ -412,10 +413,10 @@ export default {
         }
     },
     
-    async listEmployee({ rootGetters, getters, commit }, parlourId) {
+    async listEmployee({ rootGetters, getters, commit }, formData) {
         try {
             const response = await axios.get(
-                `${rootGetters.getBaseUrl}/employees/by-parlourId?parlourId=${parlourId}`,
+                `${rootGetters.getBaseUrl}/employees/by-parlourId?parlourId=${formData}`,
                 {
                     headers: {
                         Authorization: `Bearer ${getters.getToken}`,
@@ -456,25 +457,26 @@ export default {
     //       return false;
     //     }
     //   },
-    //   Appointment
-      async addAppoint({rootGetters,getters,commit}) {
-        try {
-         const response = await axios.post(
-            `${rootGetters.getBaseUrl}/booking/addBooking`,
-            {
-                headers:{
-                 Authorization: `Bearer ${getters.getToken}`
-                }
-            }
-        );
 
-        if (response.status >= 200 && response.status < 300) {
-            commit('setAddAppointment', response.data); 
-            return true;
-        } 
-        } catch (error) {
-            console.error('Error fetching appointments:', error);
-            return false;
-        }
-    }
+    // //   Appointment
+    //   async addAppoint({rootGetters,getters,commit}) {
+    //     try {
+    //      const response = await axios.post(
+    //         `${rootGetters.getBaseUrl}/booking/addBooking`,
+    //         {
+    //             headers:{
+    //              Authorization: `Bearer ${getters.getToken}`
+    //             }
+    //         }
+    //     );
+
+    //     if (response.status >= 200 && response.status < 300) {
+    //         commit('setAddAppointment', response.data); 
+    //         return true;
+    //     } 
+    //     } catch (error) {
+    //         console.error('Error fetching appointments:', error);
+    //         return false;
+    //     }
+    // }
 };

@@ -7,6 +7,9 @@
         </template>
         <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
         <v-spacer></v-spacer>
+        <v-btn icon @click="gotoHome">
+            <v-icon>mdi-home</v-icon>
+        </v-btn>
       </v-app-bar>
   
       <v-app class="bgimage">
@@ -144,6 +147,9 @@ export default {
     };
   },
   methods: {
+    gotoHome(){
+      this.$router.push({ name: 'parlourHome' });
+    },
     async fetchServices(){
       try{
         const response= await this.$store.dispatch("parlour/getServices");

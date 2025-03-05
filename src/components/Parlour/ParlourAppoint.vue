@@ -7,6 +7,9 @@
       </template>
       <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
       <v-spacer></v-spacer>
+      <v-btn icon @click="gotoHome">
+        <v-icon>mdi-home</v-icon>
+      </v-btn>
     </v-app-bar>
   
         <!-- Content Section -->
@@ -126,6 +129,9 @@
       },
     },
     methods: {
+      gotoHome(){
+      this.$router.push({ name: 'parlourHome' });
+    },
       ...mapActions(['addAppoint']),
       markStart(index) {
         this.getAddAppoint[index].status = 'Start';
