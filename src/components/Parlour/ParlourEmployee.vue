@@ -1,9 +1,8 @@
 <template>
   <v-app class="bgimage">
-    <v-container>
-      <v-card class="pa-5 elevation-12 custom-card">
-        <!-- App Bar -->
-        <v-app-bar class="custom-gradient" elevation="3">
+    <v-card class="mx-auto">
+       <!-- App Bar -->
+      <v-app-bar class="custom-gradient" elevation="3">
           <v-icon class="mr-3">fas fa-cut</v-icon>
           <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
           <v-spacer></v-spacer>
@@ -13,91 +12,96 @@
         </v-app-bar>
 
         <v-main>
-          <v-container>
-            <v-row>
-              <!-- Employee Form -->
-              <v-col cols="12" md="6">
-                <v-card class="pa-5 elevation-5">
-                  <v-card-title class="text-h6 font-weight-bold">Add Employee</v-card-title>
-                  <v-card-text>
-                    <v-form ref="form" @submit.prevent="employeeAdd">
-                      <v-text-field
-                        label="Employee Name"
-                        v-model="newEmployee.empName"
-                        :rules="[rules.required, rules.onlyLetters]"
-                        outlined
-                        dense
-                      ></v-text-field>
-                      <v-file-input
-                        label="Add Image"
-                        accept="image/*"
-                        outlined
-                        dense
-                        @change="handleFileUpload"
-                      ></v-file-input>
-                      <v-btn
-                        block
-                        color="primary"
-                        :loading="newEmployee.isLoading"
-                        type="submit"
-                        :disabled="newEmployee.isLoading"
-                        class="mt-3"
-                      >
-                        <v-icon left>mdi-account-plus</v-icon>
-                        Add Employee
-                      </v-btn>
-                    </v-form>
-                  </v-card-text>
+          <v-container fluid>
+            <v-row dense>
+              <v-col cols="12">
+                <!-- Add Employee Card -->
+                <v-card width="1000px" class="text-black mx-auto pa-5">
+                  <h1 class="mt-3">Add Employee</h1>
+                  <v-form ref="form" @submit.prevent="employeeAdd">
+                    <v-text-field
+                      label="Employee Name"
+                      v-model="newEmployee.empName"
+                      :rules="[rules.required, rules.onlyLetters]"
+                      outlined
+                      dense
+                    ></v-text-field>
+                    <v-file-input
+                      label="Add Image"
+                      accept="image/*"
+                      outlined
+                      dense
+                      @change="handleFileUpload"
+                    ></v-file-input>
+                    <v-img 
+                      v-if="newEmployee.image" 
+                      :src="newEmployee.image" 
+                      alt="Selected Image" 
+                      max-width="100" 
+                      class="mt-2"
+                    ></v-img>
+                    <v-btn
+                      block
+                      color="primary"
+                      :loading="newEmployee.isLoading"
+                      type="submit"
+                      :disabled="newEmployee.isLoading"
+                      class="mt-3"
+                    >
+                      <v-icon left>mdi-account-plus</v-icon>
+                      Add Employee
+                    </v-btn>
+                  </v-form>
                 </v-card>
-              </v-col>
-
-              <!-- Employee List -->
-              <v-col cols="12" md="6">
-                <v-card class="pa-5 elevation-5">
+              
+                <!-- Employee List Card (Stacked Below) -->
+                <v-card width="1000px" class="pa-5 elevation-5 mx-auto mt-5">
                   <v-card-title class="text-h6 font-weight-bold">Employee List</v-card-title>
                   <v-data-table
                     :headers="tableHeader"
                     :items="listedEmployee"
+                    item-value="id"
                     dense
                     class="elevation-1"
                     no-data-text="No employees found"
                   >
-                     <!-- Employee ID -->
-                  <template v-slot:item.id="{ item }">
-                    <span>{{ item.id }}</span>
-                  </template>
-                
-                  <!-- Employee Name -->
-                  <template v-slot:item.employeeName="{ item }">
-                    <span>{{ item.employeeName }}</span>
-                  </template>
-                
-                  <!-- Availability Toggle Button -->
-                  <template v-slot:item.availability="{item}">
-                    <v-switch 
-                      v-model="item.availability" 
-                      color="primary"
-                      @change="toggleAvailability(item)"
-                    ></v-switch>
-                  </template>
-                
-                  <!-- Edit & Delete Buttons -->
-                  <template v-slot:item.actions="{ item }">
-                    <v-btn icon small color="primary" @click="openEditDialog(item)">
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn icon small color="red" @click="deleteEmployee(item)">
-                      <v-icon>mdi-delete</v-icon>
-                    </v-btn>
-                  </template>
-                </v-data-table>
-              </v-card>
-            </v-col>
+                    <!-- Availability Toggle -->
+                    <template v-slot:item.availability="{ item }">
+                      <v-switch 
+                        v-model="item.availability" 
+                        color="primary"
+                        @change="toggleAvailability(item)"
+                      ></v-switch>
+                    </template>
+                  
+                    <!-- Image Column -->
+                    <template v-slot:item.image="{ item }">
+                      <v-img 
+                        v-if="item.image"
+                        :src="item.image" 
+                        max-height="80px" 
+                        max-width="80px"
+                        class="rounded-lg"
+                      ></v-img>
+                      <div v-else>No image uploaded</div>
+                    </template>
+                  
+                    <!-- Actions -->
+                    <template v-slot:item.actions="{ item }">
+                      <v-btn icon small color="primary" @click="openEditDialog(item)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-btn icon small color="red" @click="deleteEmployee(item)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-data-table>
+                </v-card>
+              </v-col>
             </v-row>
           </v-container>
         </v-main>
-      </v-card>
-    </v-container>
+     </v-card>
 
     <!-- Edit Employee Dialog -->
     <v-dialog v-model="editDialog" max-width="500px">
@@ -113,11 +117,28 @@
             ></v-text-field>
 
             <v-file-input 
+              ref="fileInput"
               label="Upload Image" 
               accept="image/*" 
-              outlined dense 
+              outlined 
+              dense 
               @change="handleEditFileUpload"
-            ></v-file-input>
+              prepend-inner-icon="mdi-camera"
+            >
+              <!-- Show current image as a preview -->
+              <template v-slot:prepend>
+                <v-img 
+                  v-if="editData.imagePreview"
+                  :src="editData.imagePreview" 
+                  alt="Selected Image" 
+                  max-width="50" 
+                  max-height="50"
+                  class="rounded-lg cursor-pointer"
+                  @click="triggerFileInput"
+                ></v-img>
+              </template>
+            </v-file-input>
+
             <!-- <v-switch label="Availability" v-model="editData.availability" color="primary"></v-switch> -->
           </v-form>
         </v-card-text>
@@ -158,11 +179,12 @@ export default {
         isLoading: false,
       },
       tableHeader: [
-      { text: "ID", value: "id" },
-      { text: "Employee Name", value: "employeeName" },
-      { text: "Availability", value: "availability" },
-      { text: "Actions", value: "actions", sortable: false },
-      ],
+      { title: "ID", key: "id" },
+      { title: "Employee Name", key: "employeeName" },
+      { title: "Image", key: "image" },
+      { title: "Availability", key: "availability" },
+      { title: "Actions", key: "actions", sortable: false },
+    ],
       editData: {
         empName: "",
         image: null,
@@ -184,8 +206,10 @@ export default {
 
     listedEmployee(){
       return this.getEmployee.map(employee => ({
-        ...employee,
+        id: employee.id,
+        employeeName: employee.employeeName, // Ensure this matches the header value
         availability: employee.isAvailable ?? false,
+        image: employee.image ? `data:image/png;base64,${employee.image}` : null,
       }));
     },
   },
@@ -193,8 +217,14 @@ export default {
     console.log("Fetching employees...");
     console.log("Parlour Data:", this.parlour);
       this.fetchEmployees();
+      this.editData = this.empName;
+      this.editImage = this.image;
   },
   methods: {
+    triggerFileInput() {
+      this.$refs.fileInput.$el.querySelector('input').click();
+    },
+
     gotoHome(){
       this.$router.push({ name: 'parlourHome' });
     },
@@ -203,7 +233,8 @@ export default {
         id: employee.id,
         empName: employee.employeeName,
         availability: employee.availability,
-        image: employee.image,
+        image: null, // Keep the existing image URL if present
+        imagePreview: employee.image ? `data:image/png;base64,${employee.image}` : null
       };
       this.editDialog = true;
     },
@@ -211,13 +242,16 @@ export default {
       this.editDialog = false;
       this.editData = { empName: "", image: null, availability: false, id: null };
     },
-    // handleFileUpload(event) {
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     this.newEmployee.image = file;
-    //     this.newEmployee.imagePreview = URL.createObjectURL(file); 
-    //   }
-    // },
+    handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = ()=>{
+          this.newEmployee.imagePreview = URL.createObjectURL(file);     
+        };
+      }
+    },
     handleEditFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
@@ -272,12 +306,15 @@ export default {
     async updateEmployee() {
       try {
         const formData = new FormData();
-        formData.append("id", this.editData.id);
+        formData.append("employeeId", this.editData.id);
         formData.append("employeeName", this.editData.empName);
-        formData.append("parlourId", this.parlour.parlour.id);
-              
+        // formData.append("parlourId", this.parlour.parlour.id);
+      
+        // Check if a new image is selected
         if (this.editData.image instanceof File) {
-          formData.append("image", this.editData.image);
+          formData.append("image", this.editData.image); // Upload new image
+        } else if (typeof this.editData.image === "string") {
+          formData.append("existingImage", this.editData.image); // Send existing image path
         }
       
         const response = await this.$store.dispatch("parlour/editEmployee", formData);
@@ -286,10 +323,13 @@ export default {
           this.showSuccessSnackbar("Employee updated successfully!");
           this.editDialog = false;
           await this.fetchEmployees();
+        } else {
+          console.error("API Error:", response);
+          this.showSuccessSnackbar(response?.message || "Failed to update employee.");
         }
       } catch (error) {
-        console.error("Error updating employee:", error.response ? error.response.data : error);
-        this.showSuccessSnackbar(error.response?.data?.message || "Failed to update employee.");
+        console.error("Error updating employee:", error);
+        this.showSuccessSnackbar(error?.response?.data?.message || "Failed to update employee.");
       }
     },
     async deleteEmployee(employee) {
@@ -391,11 +431,6 @@ export default {
   background: white;
   border-radius: 10px;
 }
-
-.v-chip {
-  font-weight: bold;
-}
-
 .v-card {
   border-radius: 12px;
 }

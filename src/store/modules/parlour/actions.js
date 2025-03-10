@@ -102,7 +102,7 @@ export default {
                     }
                 );
                 if (response.status >= 200 && response.status < 300) { 
-                    return {success: true};
+                    return true;
                 }
             } catch (error) {
                 console.error(error);
@@ -369,27 +369,32 @@ export default {
     
     async editEmployee({ rootGetters, getters }, formData) {
         try {
+            // Debugging: Log formData content
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ": " + pair[1]);
+            }
+    
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/employees/updateEmployee?employeeId=${formData.get("id")}`, 
-                formData,  // Include form data as request body
+                `${rootGetters.getBaseUrl}/employees/updateEmployee`, // Fixed URL
+                formData,
                 {
                     headers: {
                         Authorization: `Bearer ${getters.getToken}`,
-                        "Content-Type": "application/json",
+                        "Content-Type": "multipart/form-data",
                     },
                 }
             );
     
             if (response.status >= 200 && response.status < 300) {
-                console.log('Employee updated successfully:', response);
-                return response.data;
+                console.log("Employee updated successfully:", response.data);
+                return true;
             }
             return false;
         } catch (error) {
             console.error("Error updating employee:", error);
-            throw new Error(error.response?.data?.message || 'Failed to update employee.');
+            throw new Error(error.response?.data?.message || "Failed to update employee.");
         }
-    },
+    },    
     
     async deleteEmployee({ rootGetters, getters }, employeeId) {
         try {
