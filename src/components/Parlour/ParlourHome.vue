@@ -40,7 +40,7 @@
             </v-row>
             <v-row justify="center">
               <v-col class="text-left">
-                <p><strong>Name:</strong> {{ parlourName }}</p>
+                <p><strong>Parlour Name:</strong> {{ parlourName }}</p>
                 <p><strong>Email:</strong> {{ parlourEmail }}</p>
                 <p><strong>Phone Number:</strong> {{ phoneNumber }}</p>
                </v-col>
@@ -59,56 +59,30 @@
       <v-card>
         <v-card-title class="headline text-center">Edit Profile</v-card-title>
         <v-container>
-    <v-form @submit.prevent="updateParlour">
-      <v-text-field label="Parlour Name" v-model="parlourName" required></v-text-field>
-      <v-text-field label="Phone Number" v-model="phoneNumber" required></v-text-field>
+          <v-form @submit.prevent="updateParlour">
+      <!-- Profile Image Upload -->
+      <v-img v-if="profileImagePreview" :src="profileImagePreview" contain height="100"></v-img>
+      <v-file-input label="Profile Image" accept="image/*" outlined dense 
+        @change="handleFileUpload($event, 'profile')" prepend-inner-icon="mdi-camera">
+      </v-file-input>
+
+      <!-- Cover Image Upload -->
+      <v-img v-if="coverImagePreview" :src="coverImagePreview" contain height="100"></v-img>
+      <v-file-input label="Cover Image" accept="image/*" outlined dense 
+        @change="handleFileUpload($event, 'cover')" prepend-inner-icon="mdi-camera">
+      </v-file-input>
+
+      <!-- License Image Upload -->
+      <v-img v-if="licenseImagePreview" :src="licenseImagePreview" contain height="100"></v-img>
+      <v-file-input label="License Image" accept="image/*" outlined dense 
+        @change="handleFileUpload($event, 'license')" prepend-inner-icon="mdi-camera">
+      </v-file-input>
+
+      <v-text-field label="Parlour Name" v-model="editedParlourName" required></v-text-field>
+      <v-text-field label="Phone Number" v-model="editedPhoneNumber" required></v-text-field>
       <v-text-field label="Email" v-model="email" required></v-text-field>
       <v-text-field label="Password" v-model="password" type="password" required></v-text-field>
-      
-      <!-- Profile Image -->
-      <v-img 
-        v-if="profileImagePreview" 
-        :src="profileImagePreview" 
-        alt="Profile Image" 
-        contain height="100"
-      ></v-img>
-      <v-file-input 
-        label="Profile Image" 
-        accept="image/*" 
-        @change="(e)=> handleImageUpload('profile',e)"
-      ></v-file-input>
-
-      <!-- Cover Image -->
-      <v-img 
-        v-if="coverImagePreview" 
-        :src="coverImagePreview" 
-        alt="Cover Image" 
-        contain height="100"
-      ></v-img>
-      <v-file-input 
-        label="Cover Image" 
-        accept="image/*" 
-        @change="(e)=> handleImageUpload('cover',e)"
-      ></v-file-input>
-
-      <!-- License Image -->
-      <v-img v-if="licenseImagePreview" 
-        :src="licenseImagePreview" 
-        alt="License Image" 
-        contain height="100"
-      ></v-img>
-      <v-file-input 
-        label="License Image" 
-        accept="image/*" 
-        @change="(e)=> handleImageUpload('license',e)"
-      ></v-file-input>
-
-      <v-text-field 
-       label="License Number" 
-       v-model="licenseNumber" 
-       required
-      ></v-text-field>
-
+      <v-text-field label="License Number" v-model="licenseNumber" required></v-text-field>
       <v-text-field label="Ratings" v-model="ratings" required></v-text-field>
       <v-text-field label="Location" v-model="location" required></v-text-field>
       <v-textarea label="Description" v-model="description"></v-textarea>
@@ -117,16 +91,15 @@
       <v-text-field label="Parlour Id" v-model="id" required></v-text-field>
       <v-text-field label="Status" v-model="status" required></v-text-field>
       
-      <v-btn type="submit" color="primary">Update</v-btn>
+      <v-btn color="primary" @click="updateParlour">Update</v-btn>
     </v-form>
   </v-container>
         <v-card-actions class="justify-center">
           <!-- <v-btn color="primary" @click="saveProfile">Save</v-btn> -->
-          <v-btn color="red" @click="editDialog = false">Cancel</v-btn>
+          <v-btn type="submit" color="red" @click="editDialog = false">Cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-
 
     <!-- Main Content -->
     <v-main>
@@ -140,23 +113,7 @@
             height="400px" 
             cover>
           </v-img>
-          <!-- Cover Image Upload Dialog -->
-          <!-- <v-dialog v-model="coverDialog" persistent max-width="400px">
-            <v-card>
-              <v-card-title class="headline text-center">Change Cover Photo</v-card-title>
-              <v-card-text>
-                <v-file-input 
-                  label="Upload New Cover Image" 
-                  accept="image/*" 
-                  @change="handleCoverImageUpload"
-                ></v-file-input>
-              </v-card-text>
-              <v-card-actions class="justify-center">
-                <v-btn color="primary" @click="saveCoverImage">Save</v-btn>
-                <v-btn color="red" @click="coverDialog = false">Cancel</v-btn>
-              </v-card-actions>
-            </v-card>
-          </v-dialog> -->
+          
           <!-- Profile Section -->
           <div class="profile-container">
             <v-avatar size="100">
@@ -176,6 +133,13 @@
         </v-container>
       </v-card>
     </v-main>
+    <!-- Success Snackbar -->
+    <v-snackbar v-model="successSnackbar" timeout="3000" color="success" elevation="2" bottom>
+      {{ successMessage }}
+      <template v-slot:action>
+        <v-btn color="white" text @click="redirectToHomePage">OK</v-btn>
+      </template>
+    </v-snackbar>
   </v-app>
 </template>
 
@@ -201,7 +165,9 @@ export default {
     },
     getCoverImage() {
       return this.parlour.parlour.coverImage ? 'data:image/png;base64,' + this.parlour.parlour.coverImage : require('@/assets/beauty3.jpg');
-    }
+    },
+
+
   },
   mounted() {
     this.editedName = this.parlourName;
@@ -211,8 +177,10 @@ export default {
   },
   data() {
     return {
-      // parlourName: "",
-      // phoneNumber: "",
+      editedParlourName: "",
+      editedPhoneNumber: "",
+      successSnackbar: false,
+      successMessage: "",
       password: "",
       email: "",
       licenseNumber: "",
@@ -229,7 +197,6 @@ export default {
       coverImagePreview: null,
       licenseImage: null,
       licenseImagePreview: null,
-
       coverDialog: false, 
       selectedCoverFile: null,
       showDialog: false,
@@ -248,113 +215,79 @@ export default {
     };
   },
   methods: {
-    // handleImageUpload(event) {
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     this.convertFileToBase64(file).then(base64 => {
-    //       this.image = base64;
-    //       this.editedProfileImage = 'data:image/png;base64,' + base64; // Update preview
-    //     });
-    //   }
-    // },
-    // handleCoverImageUpload(event) {
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     this.convertFileToBase64(file).then(base64 => {
-    //       this.coverImage = base64;
-    //     });
-    //   }
-    // },
-    // handleLicenseImageUpload(event) {
-    //   const file = event.target.files[0];
-    //   if (file) {
-    //     this.convertFileToBase64(file).then(base64 => {
-    //       this.licenseImage = base64;  
-    //     });
-        
-    //   }
-    // },
-    handleImageUpload(type, event) {
-  if (!event || !event.target || !event.target.files) {
-    console.error("File upload event is undefined or malformed.");
-    return;
-  }
+    handleEditFileUpload(event) {
+      const file = event.target.files[0];
+      if (file) {
+        this.editData.image = file;
+        this.editData.imagePreview = URL.createObjectURL(file);
+      }
+    },
+    // Handle image selection and create a preview
+    handleFileUpload(event, type) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    if (type === "profile") {
-      this.profileImage = file;
-      this.profileImagePreview = e.target.result;
-    } else if (type === "cover") {
-      this.coverImage = file;
-      this.coverImagePreview = e.target.result;
-    } else if (type === "license") {
-      this.licenseImage = file;
-      this.licenseImagePreview = e.target.result;
-    }
-  };
-  reader.readAsDataURL(file);
-},
-    // async saveCoverImage() {
-    //   if (!this.selectedCoverFile) {
-    //     alert("Please select an image.");
-    //     return;
-    //   }
-
-    //   const base64Image = await this.convertFileToBase64(this.selectedCoverFile);
-
-    //   const payload = {
-    //     id: this.parlour?.parlour?.id,
-    //     coverImage: base64Image
-    //   };
-
-    //   const success = await this.$store.dispatch("parlour/updateParlour", payload);
-
-    //   if (success) {
-    //     alert("Cover photo updated successfully!");
-    //     this.coverDialog = false;
-    //   } else {
-    //     alert("Failed to update cover photo.");
-    //   }
-    // },
-    
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (type === "profile") {
+          this.profileImage = file;
+          this.profileImagePreview = e.target.result;
+        } else if (type === "cover") {
+          this.coverImage = file;
+          this.coverImagePreview = e.target.result;
+        } else if (type === "license") {
+          this.licenseImage = file;
+          this.licenseImagePreview = e.target.result;
+        }
+      };
+      reader.readAsDataURL(file);
+    },    
     async updateParlour() {
       try {
-        const formData = new FormData();
-        formData.append("parlourName", this.parlourName);
-        formData.append("phoneNumber", this.phoneNumber);
-        formData.append("password", this.password);
-        formData.append("email", this.email);
-        formData.append("licenseNumber", this.licenseNumber);
-        formData.append("ratings", this.ratings);
-        formData.append("location", this.location);
-        formData.append("description", this.description);
-        formData.append("latitude", this.latitude);
-        formData.append("longitude", this.longitude);
-        formData.append("id", this.id);
-        formData.append("status", this.status);
-          
-        if (this.profileImage) formData.append("image", this.profileImage);
-          if (this.coverImage) formData.append("coverImage", this.coverImage);
-          if (this.licenseImage) formData.append("licenseImage", this.licenseImage);
-          
-            const response = await this.$store.dispatch("parlour/updateParlour", formData);
-            console.log("Update Response:", response);
-            
-            if (response) {
-              this.$toast.success("Profile updated successfully!");
-              this.editDialog = false;
-            } else {
-              this.$toast.error("Failed to update profile.");
-            }
-          } catch (error) {
-            console.error("Error updating profile:", error);
-            this.$toast.error("An error occurred while updating the profile.");
+          const formData = new FormData();
+          formData.append("parlourName", this.editedParlourName);
+          formData.append("phoneNumber", this.editedPhoneNumber);
+          formData.append("password", this.password);
+          formData.append("email", this.email);
+          formData.append("licenseNumber", this.licenseNumber);
+          formData.append("ratings", this.ratings);
+          formData.append("location", this.location);
+          formData.append("description", this.description);
+          formData.append("latitude", this.latitude);
+          formData.append("longitude", this.longitude);
+          formData.append("id", this.id);
+          formData.append("status", this.status);
+
+          if (this.profileImage instanceof File) {
+            formData.append("image", this.profileImage); // Upload new image
+          } 
+
+          if (this.coverImage instanceof File) {
+            formData.append("coverImage", this.coverImage);
           }
-        },
+
+          if (this.licenseImage instanceof File) {
+            formData.append("licenseImage", this.licenseImage);
+          }
+
+          const response = await this.$store.dispatch("parlour/editParlour", formData);
+
+          if (response) {
+            this.showSuccessSnackbar("Parlour updated successfully!");
+            this.resetForm();
+          } else {
+             this.showSuccessSnackbar(response?.message || "Failed to update parlour.");
+          }
+        } catch (error) {
+          console.error("Error updating profile:", error);
+          this.showSuccessSnackbar("Failed to update parlour.");
+
+        }
+    },
+    showSuccessSnackbar(message) {
+      this.successMessage = message;
+      this.successSnackbar = true;
+    },
 
     convertFileToBase64(file) {
       return new Promise((resolve, reject) => {
@@ -385,7 +318,39 @@ export default {
             this.$toast.error('Failed to send deletion request. Please try again.');
         }
     },
+    resetForm() {
+      this.editedParlourName = "";
+      this.email = "";
+      this.editedPhoneNumber = "";
+      this.password = "";
+      this.licenseNumber = "";
+      this.ratings = "";
+      this.location = "";
+      this.description = "";
+      this.latitude = "";
+      this.longitude = "";
+      this.id = "";
+      this.status = "";
 
+      // Reset file inputs
+      this.profileImage = null;
+      this.profileImagePreview = null;
+      this.coverImage = null;
+      this.coverImagePreview = null;
+      this.licenseImage = null;
+      this.licenseImagePreview = null;
+
+      // Reset file input elements
+      if (this.$refs.profileFileInput) this.$refs.profileFileInput.value = "";
+      if (this.$refs.coverFileInput) this.$refs.coverFileInput.value = "";
+      if (this.$refs.licenseFileInput) this.$refs.licenseFileInput.value = "";
+
+      this.editDialog = false; // Close the edit dialog
+    },
+    redirectToHomePage() {
+      this.successSnackbar = false;
+      this.$router.push({name: 'parlourHome'});
+    },
     toggleDialog() {
       this.showDialog = !this.showDialog;
     },
@@ -395,21 +360,20 @@ export default {
         await this.$store.dispatch("parlour/parlour", this.parlour.parlour.id);
       
         // Populate the fields with the latest data
-        this.editedName = this.parlourName;
-        this.editedEmail = this.parlourEmail;
-        this.editedPhone = this.phoneNumber;
-        this.editedProfileImage = this.getProfileImage;
+        this.id = this.parlour.parlour.id || '';
+        this.editedParlourName = this.parlour.parlour.parlourName || "";
+        this.editedPhoneNumber = this.parlour.parlour.phoneNumber || "";
+        this.email = this.parlour.parlour.email;
         this.image = null; // Reset image selection
         this.coverImage = null; // Reset cover image selection
+        this.licenseImage = null;
         this.licenseNumber = this.parlour.parlour.licenseNumber || '';
         this.ratings = this.parlour.parlour.ratings || '';
         this.location = this.parlour.parlour.location || '';
         this.description = this.parlour.parlour.description || '';
         this.latitude = this.parlour.parlour.latitude || '';
         this.longitude = this.parlour.parlour.longitude || '';
-        this.id = this.parlour.parlour.id || '';
         this.status = this.parlour.parlour.status || '0';
-      
         this.email = this.parlour.parlour.email || '';
         this.password = this.parlour.parlour.password || ''; // Only if password is stored (not recommended for security reasons)
 

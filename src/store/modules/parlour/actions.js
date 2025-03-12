@@ -90,7 +90,7 @@ export default {
       },
     
       // Update Parlour
-    async updateParlour({ rootGetters, getters},formData) {
+    async editParlour({ rootGetters, getters},formData) {
         try {
             const response = await axios.put(
                 `${rootGetters.getBaseUrl}/parlour/update`, 
@@ -102,6 +102,7 @@ export default {
                     }
                 );
                 if (response.status >= 200 && response.status < 300) { 
+                    console.log("Parlour updated successfully:", response.data);
                     return true;
                 }
             } catch (error) {
@@ -122,8 +123,6 @@ export default {
               );
           
               if (response.status >= 200 && response.status < 300) {
-                
-                // Pass the correct ID
                 return true;
               }
             return false;

@@ -8,6 +8,9 @@
         </template>
         <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
         <v-spacer></v-spacer>
+        <v-btn icon @click="gotoHome">
+          <v-icon>mdi-home</v-icon>
+        </v-btn>
       </v-app-bar>
 
       <v-main>
@@ -117,20 +120,78 @@
                     </div>
                     <div class="table-cell actions">
                       <v-btn color="primary" @click="openEditDialog(service)">Edit</v-btn>
+
                       <!-- Edit Service Dialog -->
                       <v-dialog v-model="editDialog" max-width="500px">
                         <v-card>
                           <v-card-title>
                             <span class="text-h5">Edit Service</span>
                           </v-card-title>
-
                           <v-card-text>
-                            <v-form ref="editForm">
-                              <!-- <v-text-field v-model="editedService.id" label="Item Name" required disabled></v-text-field> -->
+                            <v-form ref="editForm" @submit.prevent="editService">
                               <v-text-field v-model="editedService.itemName" label="Item Name" required></v-text-field>
                               <v-textarea v-model="editedService.description" label="Description" required></v-textarea>
-                              <v-text-field v-model="editedService.price" label="Price" type="number" required></v-text-field>
-                              <v-text-field v-model="editedService.serviceTime" label="Service Time" required></v-text-field>
+                              <v-text-field 
+                                v-model="editedService.price" 
+                                label="Price" 
+                                type="number" 
+                                :rules="[v => !!v || 'Price is required', v => /^\d+(\.\d{1,2})?$/.test(v) || 'Invalid price format']"
+                                required
+                              ></v-text-field>
+                              <v-text-field 
+                                v-model="editedService.serviceTime" 
+                                label="Service Time" 
+                                :rules="[v => !!v || 'Time is required', v => /^([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])$/.test(v) || 'Invalid time format (hh:mm:ss)']"
+                                required
+                              ></v-text-field>
+                            
+                              <!-- Category Select -->
+                              <v-select
+                                v-model="editedService.categoryId"
+                                :items="categories"
+                                item-title="name"
+                                item-value="id"
+                                label="Category"
+                                required
+                              ></v-select>
+                            
+                              <!-- Subcategory Select -->
+                              <v-select
+                                v-model="editedService.subCategoryId"
+                                :items="subCategories"
+                                item-title="subCategoryName"
+                                item-value="id"
+                                label="Sub Category"
+                                required
+                              ></v-select>
+                            
+                              <!-- Subsub Category Select -->
+                              <v-select
+                                v-model="editedService.subSubCategoryId"
+                                :items="subSubCategories"
+                                item-title="subSubCategoryName"
+                                item-value="id"
+                                label="Subsub Category"
+                                required
+                              ></v-select>
+                            
+                              <!-- Image Upload -->
+                              <v-file-input
+                                label="Update Image"
+                                @change="handleEditImage"
+                                accept="image/*"
+                                outlined
+                              ></v-file-input>
+                            
+                              <!-- Image Preview -->
+                              <v-img 
+                                v-if="editedService.img"
+                                :src="editedService.img"
+                                max-height="80px"
+                                max-width="80px"
+                                class="custom-image"
+                              ></v-img>
+                            
                               <v-switch v-model="editedService.availability" label="Available"></v-switch>
                             </v-form>
                           </v-card-text>
@@ -142,6 +203,7 @@
                           </v-card-actions>
                         </v-card>
                       </v-dialog>
+
                       <v-btn color="error" @click="deleteService(service)">Delete</v-btn>
                     </div>
                   </div>
@@ -236,10 +298,23 @@ export default {
     this.$store.dispatch("parlour/serviceSubSubCategory");
   },
   methods: {
-    openEditDialog(service){
-      this.editedService = { ...service }; // Copy data to prevent modifying original before save
+    openEditDialog(service) {
+      this.editedService = { 
+        id: service.id,
+        itemName: service.itemName,
+        description: service.description,
+        price: service.price,
+        serviceTime: service.serviceTime,
+        availability: service.availability,
+        categoryId: service.categoryId,
+        subCategoryId: service.subCategoryId,
+        subSubCategoryId: service.subSubCategoryId,
+        img: service.img || null, // Assign existing image
+      };
+    
       this.editDialog = true;
     },
+
     handleFormSubmit() {
       if (this.formValid) {
         this.serviceAdd();
@@ -324,37 +399,47 @@ export default {
       }
     },
     async editService() {
-      try {
-        const formData = new FormData();
-        formData.append("id", this.editedService.id); // Ensure ID is included
-        formData.append("itemName", this.editedService.itemName);
-        formData.append("description", this.editedService.description);
-        formData.append("price", this.editedService.price);
-        formData.append("categoryId", this.editedService.categoryId);
-        formData.append("subCategoryId", this.editedService.subCategoryId);
-        formData.append("subSubCategoryId", this.editedService.subSubCategoryId);
-        formData.append("serviceTime", this.editedService.serviceTime);
-        formData.append("availability", this.editedService.availability);
+       try {
+         const formData = new FormData();
+         formData.append("itemId", this.editedService.id);
+         formData.append("itemName", this.editedService.itemName);
+         formData.append("description", this.editedService.description);
+         formData.append("price", this.editedService.price);
+         formData.append("serviceTime", this.editedService.serviceTime);
+         formData.append("availability", this.editedService.availability);
+         formData.append("categoryId", this.editedService.categoryId);
+         formData.append("subCategoryId", this.editedService.subCategoryId);
+         formData.append("subSubCategoryId", this.editedService.subSubCategoryId);
+         formData.append("parlourId", this.parlour.parlour.id);
+         if (this.editedServiceImage) {
+           formData.append("itemImage", this.editedServiceImage);
+         }
 
-        if (this.serviceImage) {
-          formData.append("itemImage", this.serviceImage);
-        }
-      
-        console.log("Updating service with data:", [...formData.entries()]); // Debugging
-      
-        // Dispatch Vuex action (passing only formData)
-        const success = await this.$store.dispatch("parlour/updateService", formData);
-      
-        if (!success) throw new Error("Failed to update services");
-      
-        this.$toast.success("Service updated successfully!");
-        this.editDialog = false;
-        this.fetchService(); // Refresh the service list
-      } catch (error) {
-        console.error("Failed to update services:", error);
-        this.$toast.error("An error occurred while updating the service.");
+         const success = await this.$store.dispatch("parlour/updateService", formData);
+       
+         if (!success) throw new Error("Failed to update services");
+       
+         this.$toast.success("Service updated successfully!");
+         this.editDialog = false;
+         await this.fetchService(); 
+       } catch (error) {
+         console.error("Failed to update service:", error);
+         this.$toast.error("An error occurred while updating the service.");
+       }
+    },
+    
+    handleEditImage(event) {
+      const file = event?.target?.files?.[0];
+      if (file) {
+        this.editedServiceImage = file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+        this.editedServiceImage = e.target.result; // Show preview of new image
+      };
+      reader.readAsDataURL(file);
       }
     },
+
     async deleteService(service) {
       if (confirm(`Are you sure you want to delete the service: ${service.itemName}?`)) {
         try {
@@ -370,7 +455,10 @@ export default {
           console.error("Error deleting service:", error);
         }
       }
-    }
+    },
+    gotoHome(){
+      this.$router.push({ name: 'parlourHome' });
+    },
   }
 };
 </script>
