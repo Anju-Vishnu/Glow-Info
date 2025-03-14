@@ -241,7 +241,7 @@ export default {
     async submitNewPassword() {
       this.loading = true;
       this.otpError = ""; // Reset any previous errors
-  try {
+      try {
         const response = await this.$store.dispatch('parlour/UpdatePassword', {
           email: this.resetEmail,
           otp: this.otp,

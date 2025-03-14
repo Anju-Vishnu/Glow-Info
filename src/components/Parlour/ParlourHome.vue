@@ -258,6 +258,11 @@ export default {
           formData.append("id", this.id);
           formData.append("status", this.status);
 
+           // Debugging: Check image values
+           console.log("Profile Image:", this.profileImage);
+           console.log("Cover Image:", this.coverImage);
+           console.log("License Image:", this.licenseImage);
+
           if (this.profileImage instanceof File) {
             formData.append("image", this.profileImage); // Upload new image
           } 
@@ -274,7 +279,17 @@ export default {
 
           if (response) {
             this.showSuccessSnackbar("Parlour updated successfully!");
+            setTimeout(() => {
+              this.$router.push({ name: 'parlourHome' });
+            }, 2000); // 2 seconds delay for smooth transition
+
             this.resetForm();
+            await this.fetchParlourDetails();
+             // Ensure images are reset
+              this.profileImage = null;
+              this.coverImage = null;
+              this.licenseImage = null;
+
           } else {
              this.showSuccessSnackbar(response?.message || "Failed to update parlour.");
           }
@@ -376,6 +391,11 @@ export default {
         this.status = this.parlour.parlour.status || '0';
         this.email = this.parlour.parlour.email || '';
         this.password = this.parlour.parlour.password || ''; // Only if password is stored (not recommended for security reasons)
+
+         // Set image previews from existing data
+        this.profileImagePreview = this.parlour.parlour.image ? `data:image/png;base64,${this.parlour.parlour.image}` : null;
+        this.coverImagePreview = this.parlour.parlour.coverImage ? `data:image/png;base64,${this.parlour.parlour.coverImage}` : null;
+        this.licenseImagePreview = this.parlour.parlour.licenseImage ? `data:image/png;base64,${this.parlour.parlour.licenseImage}` : null;
 
         // Open the edit dialog
         this.editDialog = true;
