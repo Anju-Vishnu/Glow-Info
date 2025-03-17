@@ -400,8 +400,9 @@ export default {
     },
     async editService() {
        try {
+        
          const formData = new FormData();
-         formData.append("itemId", this.editedService.id);
+         formData.append("id", this.editedService.id);
          formData.append("itemName", this.editedService.itemName);
          formData.append("description", this.editedService.description);
          formData.append("price", this.editedService.price);
@@ -415,13 +416,14 @@ export default {
            formData.append("itemImage", this.editedServiceImage);
          }
 
-         const success = await this.$store.dispatch("parlour/updateService", formData);
-       
-         if (!success) throw new Error("Failed to update services");
+         const response = await this.$store.dispatch("parlour/updateService", formData.id);
+         
+         if (response && response.success){
        
          this.$toast.success("Service updated successfully!");
          this.editDialog = false;
          await this.fetchService(); 
+         }
        } catch (error) {
          console.error("Failed to update service:", error);
          this.$toast.error("An error occurred while updating the service.");

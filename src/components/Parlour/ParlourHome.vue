@@ -55,7 +55,7 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="editDialog" persistent max-width="400px" content-class="custom-dialog">
+    <v-dialog v-model="editDialog" persistent max-width="550px" content-class="custom-dialog">
       <v-card>
         <v-card-title class="headline text-center">Edit Profile</v-card-title>
         <v-container>
@@ -63,19 +63,19 @@
       <!-- Profile Image Upload -->
       <v-img v-if="profileImagePreview" :src="profileImagePreview" contain height="100"></v-img>
       <v-file-input label="Profile Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'profile')" prepend-inner-icon="mdi-camera">
+        @change="handleFileUpload($event, 'profile')">
       </v-file-input>
 
       <!-- Cover Image Upload -->
       <v-img v-if="coverImagePreview" :src="coverImagePreview" contain height="100"></v-img>
       <v-file-input label="Cover Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'cover')" prepend-inner-icon="mdi-camera">
+        @change="handleFileUpload($event, 'cover')">
       </v-file-input>
 
       <!-- License Image Upload -->
       <v-img v-if="licenseImagePreview" :src="licenseImagePreview" contain height="100"></v-img>
       <v-file-input label="License Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'license')" prepend-inner-icon="mdi-camera">
+        @change="handleFileUpload($event, 'license')">
       </v-file-input>
 
       <v-text-field label="Parlour Name" v-model="editedParlourName" required></v-text-field>

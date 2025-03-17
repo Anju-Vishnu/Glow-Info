@@ -223,6 +223,7 @@ export default {
         try {
             const response = await axios.put(
                 `${rootGetters.getBaseUrl}/Items/update?itemId=${formData.id}`, 
+                formData,
                 {
                     headers: {
                         Authorization: `Bearer ${getters.getToken}`
