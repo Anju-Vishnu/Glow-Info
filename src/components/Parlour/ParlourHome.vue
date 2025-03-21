@@ -258,11 +258,7 @@ export default {
           formData.append("id", this.id);
           formData.append("status", this.status);
 
-           // Debugging: Check image values
-           console.log("Profile Image:", this.profileImage);
-           console.log("Cover Image:", this.coverImage);
-           console.log("License Image:", this.licenseImage);
-
+          
           if (this.profileImage instanceof File) {
             formData.append("image", this.profileImage); // Upload new image
           } 
@@ -278,25 +274,21 @@ export default {
           const response = await this.$store.dispatch("parlour/editParlour", formData);
 
           if (response) {
-            this.showSuccessSnackbar("Parlour updated successfully!");
-            setTimeout(() => {
-              this.$router.push({ name: 'parlourHome' });
-            }, 2000); // 2 seconds delay for smooth transition
+            this.successMessage = "Parlour updated successfully!";
+            this.successSnackbar = true;
+
+            await this.$store.dispatch("parlour/parlourUpdated", this.id);
 
             this.resetForm();
-            await this.fetchParlourDetails();
-             // Ensure images are reset
-              this.profileImage = null;
-              this.coverImage = null;
-              this.licenseImage = null;
-
+            setTimeout(() => {
+              this.$router.push({ name: "parlourHome" });
+            }, 2000);
           } else {
              this.showSuccessSnackbar(response?.message || "Failed to update parlour.");
           }
         } catch (error) {
           console.error("Error updating profile:", error);
           this.showSuccessSnackbar("Failed to update parlour.");
-
         }
     },
     showSuccessSnackbar(message) {

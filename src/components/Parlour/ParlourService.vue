@@ -129,31 +129,22 @@
                           </v-card-title>
                           <v-card-text>
                             <v-form ref="editForm" @submit.prevent="editService">
+                              <v-text-field v-model="editedService.id" label="Service ID" readonly></v-text-field>
                               <v-text-field v-model="editedService.itemName" label="Item Name" required></v-text-field>
                               <v-textarea v-model="editedService.description" label="Description" required></v-textarea>
                               <v-text-field 
-                                v-model="editedService.price" 
-                                label="Price" 
-                                type="number" 
-                                :rules="[v => !!v || 'Price is required', v => /^\d+(\.\d{1,2})?$/.test(v) || 'Invalid price format']"
-                                required
-                              ></v-text-field>
-                              <v-text-field 
-                                v-model="editedService.serviceTime" 
-                                label="Service Time" 
-                                :rules="[v => !!v || 'Time is required', v => /^([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])$/.test(v) || 'Invalid time format (hh:mm:ss)']"
-                                required
-                              ></v-text-field>
-                            
+                              v-model="editedService.price" 
+                              label="Price" 
+                              type="number"
+                              :rules="[
+                                v => !!v || 'Price is required', 
+                                v => /^\d+(\.\d{1,2})?$/.test(v) || 'Invalid price format'
+                              ]" 
+                              required
+                            ></v-text-field>
+                            <v-text-field v-model="editedService.serviceTime" label="Service Time" :rules="[v => !!v || 'Time is required', v => /^([01]?[0-9]|2[0-3]):([0-5]?[0-9]):([0-5]?[0-9])$/.test(v) || 'Invalid time format (hh:mm:ss)']" required></v-text-field>
                               <!-- Category Select -->
-                              <v-select
-                                v-model="editedService.categoryId"
-                                :items="categories"
-                                item-title="name"
-                                item-value="id"
-                                label="Category"
-                                required
-                              ></v-select>
+                              <v-select v-model="editedService.categoryId" :items="categories" item-title="name" item-value="id" label="Category" required></v-select>
                             
                               <!-- Subcategory Select -->
                               <v-select
@@ -230,6 +221,9 @@ export default {
         description: "",
         price: null,
         serviceTime: "",
+        categoryId: null,
+        subSubCategoryId: null,
+        subCategoryId: null,
         availability: false
       },
       services: [],
@@ -284,6 +278,7 @@ export default {
       console.log(this.getService); 
       return this.getService.map(service => ({
         ...service,
+        id:service.id ?? null,
         description: service.description || "No description available"
       }));
     },
@@ -299,6 +294,10 @@ export default {
   },
   methods: {
     openEditDialog(service) {
+      if (!service.id) {
+        console.error("Service ID is undefined:", service);
+        return;
+      }
       this.editedService = { 
         id: service.id,
         itemName: service.itemName,
@@ -399,38 +398,37 @@ export default {
       }
     },
     async editService() {
-       try {
-        
-         const formData = new FormData();
-         formData.append("id", this.editedService.id);
-         formData.append("itemName", this.editedService.itemName);
-         formData.append("description", this.editedService.description);
-         formData.append("price", this.editedService.price);
-         formData.append("serviceTime", this.editedService.serviceTime);
-         formData.append("availability", this.editedService.availability);
-         formData.append("categoryId", this.editedService.categoryId);
-         formData.append("subCategoryId", this.editedService.subCategoryId);
-         formData.append("subSubCategoryId", this.editedService.subSubCategoryId);
-         formData.append("parlourId", this.parlour.parlour.id);
-         if (this.editedServiceImage) {
-           formData.append("itemImage", this.editedServiceImage);
-         }
-
-         const response = await this.$store.dispatch("parlour/updateService", formData.id);
-         
-         if (response && response.success){
-       
-         this.$toast.success("Service updated successfully!");
-         this.editDialog = false;
-         await this.fetchService(); 
-         }
-       } catch (error) {
-         console.error("Failed to update service:", error);
-         this.$toast.error("An error occurred while updating the service.");
+     try {
+       const formData = new FormData();
+       formData.append("id", this.editedService.id);
+       formData.append("itemName", this.editedService.itemName);
+       formData.append("description", this.editedService.description);
+       formData.append("price", this.editedService.price);
+       formData.append("serviceTime", this.editedService.serviceTime);
+       formData.append("availability", this.editedService.availability);
+       formData.append("categoryId", this.editedService.categoryId);
+       formData.append("subCategoryId", this.editedService.subCategoryId);
+       formData.append("subSubCategoryId", this.editedService.subSubCategoryId);
+       formData.append("parlourId", this.parlour.parlour.id);
+       if (this.editedServiceImage) {
+         formData.append("itemImage", this.editedServiceImage);
        }
-    },
-    
-    handleEditImage(event) {
+      
+       const response = await this.$store.dispatch("parlour/updateService", formData);
+       
+       if (response && response.success) {
+         this.$toast.success("Service updated successfully!");
+         this.editDialog = false; // Close the dialog
+         setTimeout(async()=>{
+          await this.fetchService(); // Refresh the service list
+         },300);
+      }
+     } catch (error) {
+       console.error("Failed to update service:", error);
+       this.$toast.error("An error occurred while updating the service.");
+     }
+  },
+  handleEditImage(event) {
       const file = event?.target?.files?.[0];
       if (file) {
         this.editedServiceImage = file;

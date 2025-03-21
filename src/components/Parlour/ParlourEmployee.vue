@@ -115,7 +115,13 @@
               :rules="[rules.required, rules.onlyLetters]" 
               outlined dense
             ></v-text-field>
-
+            <v-img 
+              v-if="editData.imagePreview"
+              :src="editData.imagePreview" 
+              alt="Employee Image" 
+              contain
+              height="100"
+            ></v-img>
             <v-file-input 
               ref="fileInput"
               label="Upload Image" 
@@ -125,20 +131,8 @@
               @change="handleEditFileUpload"
               prepend-inner-icon="mdi-camera"
             >
-              <!-- Show current image as a preview -->
-              <template v-slot:prepend>
-                <v-img 
-                  v-if="editData.imagePreview"
-                  :src="editData.imagePreview" 
-                  alt="Selected Image" 
-                  max-width="50" 
-                  max-height="50"
-                  class="rounded-lg cursor-pointer"
-                  @click="triggerFileInput"
-                ></v-img>
-              </template>
-            </v-file-input>
-
+          </v-file-input>
+          
             <!-- <v-switch label="Availability" v-model="editData.availability" color="primary"></v-switch> -->
           </v-form>
         </v-card-text>
@@ -171,6 +165,7 @@ export default {
       editDialog: false,
       successSnackbar: false,
       successMessage: "",
+      imagePreview: null,
       newEmployee: {
         id:"",
         empName: "",
@@ -233,8 +228,8 @@ export default {
         id: employee.id,
         empName: employee.employeeName,
         availability: employee.availability,
-        image: null, // Keep the existing image URL if present
-        imagePreview: employee.image ? `data:image/png;base64,${employee.image}` : null
+        image: employee.image, // Keep the existing image URL if present
+        imagePreview: employee.image ? employee.image : null
       };
       this.editDialog = true;
     },
@@ -245,18 +240,29 @@ export default {
     handleFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
+        console.log("Selected file:", file);
+        
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = ()=>{
-          this.newEmployee.imagePreview = URL.createObjectURL(file);     
+          this.imagage = file;
+          this.imagePreview = reader.result;
+      
+          this.newEmployee.image= file;
+          console.log("newEmployee.image:", this.newEmployee.image);
+     
         };
       }
     },
     handleEditFileUpload(event) {
       const file = event.target.files[0];
       if (file) {
-        this.editData.image = file;
-        this.editData.imagePreview = URL.createObjectURL(file);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          this.editData.image = file; // Update image
+          this.editData.imagePreview = reader.result; // Show new preview
+        };
       }
     },
     async employeeAdd() {
@@ -265,7 +271,7 @@ export default {
         formData.append("employeeName", this.newEmployee.empName);
         formData.append("parlourId", this.parlour.parlour.id);
         
-        if (this.newEmployee.image) {
+        if (this.newEmployee.image instanceof File) {
           formData.append("image", this.newEmployee.image);
         }
         // formData.append("availability", this.newEmployee.availability);

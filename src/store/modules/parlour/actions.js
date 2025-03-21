@@ -27,7 +27,7 @@ export default {
             if (response.status >= 200 && response.status < 300) {
                 commit('setToken', response.data.token);
                 commit('setParlour', response.data);
-                console.log(response.data);
+                console.log(response);
                 return true;
             }
         } catch (error) {
@@ -108,6 +108,20 @@ export default {
             } catch (error) {
                 console.error(error);
                 return false;
+            }
+        },
+        // Parlour Recall
+        async parlourUpdated({ rootGetters, commit }, id) {
+            try {
+                const response = await axios.post(`${rootGetters.getBaseUrl}/parlour/id?id=${id}`);
+
+                if (response.status >= 200 && response.status < 300) {
+                    commit('setParlour', response.data);
+                    console.log(response);
+                    return true;
+                }
+            } catch (error) {
+                console.error(error);
             }
         },
         // Delete Parlour Request
@@ -221,8 +235,14 @@ export default {
     // Update Service
     async updateService({ rootGetters, getters }, formData) {
         try {
+            const itemId = formData.get("id");
+
+            if (!itemId) {
+                console.error("Item ID is missing in update request");
+                return false;
+            }
             const response = await axios.put(
-                `${rootGetters.getBaseUrl}/Items/update?itemId=${formData.id}`, 
+                `${rootGetters.getBaseUrl}/Items/update?itemId=${itemId}`, 
                 formData,
                 {
                     headers: {
