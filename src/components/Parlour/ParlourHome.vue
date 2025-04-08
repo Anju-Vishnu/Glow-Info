@@ -6,10 +6,18 @@
         <v-icon>fas fa-cut</v-icon>
       </template>
       <v-app-bar-title class="app-bar-title">Glowinfo</v-app-bar-title>
+     <!-- Navigation Sections -->
+      <v-btn v-for="section in sections" :key="section.label" text @click="section.action">
+        <v-icon left>{{ section.icon }}</v-icon> {{ section.label }}
+      </v-btn>
+      
       <v-spacer></v-spacer>
       
-      <v-btn icon @click="fetchParlourDetails">
-        <v-icon>mdi-account</v-icon>
+      <v-btn @click="fetchParlourDetails" class="d-flex align-center">
+        <v-avatar size="32">
+          <v-img :src="getProfileImage" alt="Profile Photo"></v-img>
+        </v-avatar>
+        <span class="ml-2 text-white">{{ parlourName }}</span>
       </v-btn>
       
       <v-menu>
@@ -28,7 +36,12 @@
     </v-app-bar>
 
     <!-- Parlour Info Dialog -->
-    <v-dialog v-model="showDialog" persistent max-width="400px" content-class="custom-dialog">
+    <v-dialog 
+      v-model="showDialog" 
+      persistent 
+      max-width="400px" 
+      content-class="custom-dialog"
+    >
       <v-card>
         <v-card-title class="headline text-center">Parlour Details</v-card-title>
         <v-card-text>
@@ -60,50 +73,44 @@
         <v-card-title class="headline text-center">Edit Profile</v-card-title>
         <v-container>
           <v-form @submit.prevent="updateParlour">
-      <!-- Profile Image Upload -->
-      <v-img v-if="profileImagePreview" :src="profileImagePreview" contain height="100"></v-img>
-      <v-file-input label="Profile Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'profile')">
-      </v-file-input>
+            <!-- Profile Image Upload -->
+            <v-img v-if="profileImagePreview" :src="profileImagePreview" contain height="100"></v-img>
+              <v-file-input label="Profile Image" accept="image/*" outlined dense 
+                @change="handleFileUpload($event, 'profile')">
+              </v-file-input>
+              <!-- Cover Image Upload -->
+              <v-img v-if="coverImagePreview" :src="coverImagePreview" contain height="100"></v-img>
+              <v-file-input label="Cover Image" accept="image/*" outlined dense 
+                @change="handleFileUpload($event, 'cover')">
+              </v-file-input>
+              <!-- License Image Upload -->
+              <v-img v-if="licenseImagePreview" :src="licenseImagePreview" contain height="100"></v-img>
+              <v-file-input label="License Image" accept="image/*" outlined dense 
+                @change="handleFileUpload($event, 'license')">
+              </v-file-input>
 
-      <!-- Cover Image Upload -->
-      <v-img v-if="coverImagePreview" :src="coverImagePreview" contain height="100"></v-img>
-      <v-file-input label="Cover Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'cover')">
-      </v-file-input>
+              <v-text-field label="Parlour Name" v-model="editedParlourName" required></v-text-field>
+              <v-text-field label="Phone Number" v-model="editedPhoneNumber" required></v-text-field>
+              <v-text-field label="Email" v-model="email" required></v-text-field>
+              <v-text-field label="Password" v-model="password" type="password" required></v-text-field>
+              <v-text-field label="License Number" v-model="licenseNumber" required></v-text-field>
+              <v-text-field label="Ratings" v-model="ratings" required></v-text-field>
+              <v-text-field label="Location" v-model="location" required></v-text-field>
+              <v-textarea label="Description" v-model="description"></v-textarea>
+              <v-text-field label="Latitude" v-model="latitude" required></v-text-field>
+              <v-text-field label="Longitude" v-model="longitude" required></v-text-field>
+              <v-text-field label="Parlour Id" v-model="id" required></v-text-field>
+              <v-text-field label="Status" v-model="status" required></v-text-field>
 
-      <!-- License Image Upload -->
-      <v-img v-if="licenseImagePreview" :src="licenseImagePreview" contain height="100"></v-img>
-      <v-file-input label="License Image" accept="image/*" outlined dense 
-        @change="handleFileUpload($event, 'license')">
-      </v-file-input>
-
-      <v-text-field label="Parlour Name" v-model="editedParlourName" required></v-text-field>
-      <v-text-field label="Phone Number" v-model="editedPhoneNumber" required></v-text-field>
-      <v-text-field label="Email" v-model="email" required></v-text-field>
-      <v-text-field label="Password" v-model="password" type="password" required></v-text-field>
-      <v-text-field label="License Number" v-model="licenseNumber" required></v-text-field>
-      <v-text-field label="Ratings" v-model="ratings" required></v-text-field>
-      <v-text-field label="Location" v-model="location" required></v-text-field>
-      <v-textarea label="Description" v-model="description"></v-textarea>
-      <v-text-field label="Latitude" v-model="latitude" required></v-text-field>
-      <v-text-field label="Longitude" v-model="longitude" required></v-text-field>
-      <v-text-field label="Parlour Id" v-model="id" required></v-text-field>
-      <v-text-field label="Status" v-model="status" required></v-text-field>
-      
-      <v-btn color="primary" @click="updateParlour">Update</v-btn>
-    </v-form>
-  </v-container>
-        <v-card-actions class="justify-center">
-          <!-- <v-btn color="primary" @click="saveProfile">Save</v-btn> -->
-          <v-btn type="submit" color="red" @click="editDialog = false">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
+              <v-btn color="primary" @click="updateParlour">Update</v-btn>
+              <v-btn color="red" @click="editDialog = false">Cancel</v-btn>
+            </v-form>
+          </v-container>
+        </v-card>
+      </v-dialog>
     <!-- Main Content -->
     <v-main>
-      <v-card color="grey lighten-3" width="800px" class="mx-auto pa-4">
+      <!-- <v-card color="grey lighten-3" width="800px" class="mx-auto pa-4"> -->
         <v-container>
           <!-- Cover Image -->
           <v-img 
@@ -114,24 +121,24 @@
             cover>
           </v-img>
           
-          <!-- Profile Section -->
+          <!-- Profile Section
           <div class="profile-container">
             <v-avatar size="100">
               <v-img :src="getProfileImage" alt="Profile Photo"></v-img>
             </v-avatar>
             <v-card-title class="profile-title mt-4">{{ parlourName }}</v-card-title>
-          </div>
+          </div> -->
           
           <!-- Dynamic Sections -->
-          <v-row>
+          <!-- <v-row>
             <v-col v-for="section in sections" :key="section.label" cols="12" md="6">
               <v-btn @click="section.action" block>
                 <v-icon left>{{ section.icon }}</v-icon> {{ section.label }}
               </v-btn>
             </v-col>
-          </v-row>
+          </v-row> -->
         </v-container>
-      </v-card>
+      <!-- </v-card> -->
     </v-main>
     <!-- Success Snackbar -->
     <v-snackbar v-model="successSnackbar" timeout="3000" color="success" elevation="2" bottom>
@@ -411,10 +418,10 @@ export default {
   font-size: 24px;
   font-weight: bold;
 }
-.profile-container {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: -50px;
+.custom-dialog {
+  position: fixed;
+  top: 20px; /* Adjust as needed */
+  right: 20px; /* Adjust as needed */
+  margin: 0; /* Remove default margin */
 }
 </style>

@@ -68,7 +68,7 @@
                     :items="subSubCategories"
                     item-title="subSubCategoryName"
                     item-value="id"
-                    label="Subsub Category"
+                    label="Sub Sub Category"
                     :rules="[v => !!v || 'Subsub Category is required']"
                     required
                   ></v-select>
@@ -448,7 +448,7 @@ export default {
             alert("Service deleted successfully!"); // Browser alert
             await this.fetchService();
             this.resetForm();
-          }else{
+          } else {
             alert("Failed to delete service. Please try again.");
           }
         } catch (error) {
@@ -456,6 +456,7 @@ export default {
         }
       }
     },
+
     gotoHome(){
       this.$router.push({ name: 'parlourHome' });
     },
